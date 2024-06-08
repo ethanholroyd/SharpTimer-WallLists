@@ -40,7 +40,7 @@ To use this server addon, you'll need the following dependencies installed:
 ## Roadmap
 
 - [X] Update for SharpTimer usage.
-- [X] Add color configs.
+- [X] Add color configs. See [here](https://i.sstatic.net/lsuz4.png) for color names.
 - [X] Ability to truncate player name.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
