@@ -15,7 +15,7 @@ using MySqlConnector;
 using System.Text.Json;
 using CounterStrikeSharp.API.Modules.Timers;
 
-namespace K4Toplist;
+namespace SharpTimerPointsList;
 
 public class PluginConfig : BasePluginConfig
 {
@@ -28,9 +28,22 @@ public class PluginConfig : BasePluginConfig
 	[JsonPropertyName("DatabaseSettings")]
 	public DatabaseSettings DatabaseSettings { get; set; } = new DatabaseSettings();
 	[JsonPropertyName("TitleText")]
-	public string TitleText { get; set; } = "----- Toplist -----";
+	public string TitleText { get; set; } = "-- Server Points Leaders --";
+ 	[JsonPropertyName("MaxNameLength")]
+	public int MaxNameLength { get; set; } = 32; // Default value, 32 is max Steam name length
+	//List Colors
+	[JsonPropertyName("TitleTextColor")]
+	public string TitleTextColor { get; set; } = "Pink"; // Default=Pink
+	[JsonPropertyName("FirstPlaceColor")]
+	public string FirstPlaceColor { get; set; } = "Lime"; // Default=Lime
+	[JsonPropertyName("SecondPlaceColor")]
+	public string SecondPlaceColor { get; set; } = "Magenta"; // Default=Magenta
+	[JsonPropertyName("ThirdPlaceColor")]
+	public string ThirdPlaceColor { get; set; } = "Cyan"; // Default=Cyan
+	[JsonPropertyName("DefaultColor")]
+	public string DefaultColor { get; set; } = "White"; // Default=White
 	[JsonPropertyName("ConfigVersion")]
-	public override int Version { get; set; } = 3;
+	public override int Version { get; set; } = 4;
 }
 
 public sealed class DatabaseSettings
@@ -47,16 +60,14 @@ public sealed class DatabaseSettings
 	public int Port { get; set; } = 3306;
 	[JsonPropertyName("sslmode")]
 	public string Sslmode { get; set; } = "none";
-	[JsonPropertyName("table-prefix")]
-	public string TablePrefix { get; set; } = "";
 }
 
 [MinimumApiVersion(205)]
-public class PluginK4Toplist : BasePlugin, IPluginConfig<PluginConfig>
+public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig>
 {
-	public override string ModuleName => "K4-System @ Wall Toplist";
-	public override string ModuleAuthor => "K4ryuu";
-	public override string ModuleVersion => "1.0.1";
+	public override string ModuleName => "SharpTimer Points List";
+	public override string ModuleAuthor => "K4ryuu (SharpTimer edit by Marchand)";
+	public override string ModuleVersion => "1.0.2";
 	public required PluginConfig Config { get; set; } = new PluginConfig();
 	public static PluginCapability<IK4WorldTextSharedAPI> Capability_SharedAPI { get; } = new("k4-worldtext:sharedapi");
 
@@ -107,14 +118,14 @@ public class PluginK4Toplist : BasePlugin, IPluginConfig<PluginConfig>
 		_updateTimer?.Kill();
 	}
 
-	[ConsoleCommand("css_k4toplist", "Sets up the wall toplist of K4-System")]
+	[ConsoleCommand("css_pointslist", "Sets up the points list")]
 	[RequiresPermissions("@css/root")]
 	public void OnToplistAdd(CCSPlayerController player, CommandInfo command)
 	{
 		var checkAPI = Capability_SharedAPI.Get();
 		if (checkAPI is null)
 		{
-			command.ReplyToCommand($" {ChatColors.Silver}[ {ChatColors.Lime}K4-TopList {ChatColors.Silver}] {ChatColors.LightRed}Failed to get the shared API.");
+			command.ReplyToCommand($" {ChatColors.Silver}[ {ChatColors.Lime}PointsList {ChatColors.Silver}] {ChatColors.LightRed}Failed to get the shared API.");
 			return;
 		}
 
@@ -151,14 +162,14 @@ public class PluginK4Toplist : BasePlugin, IPluginConfig<PluginConfig>
 		});
 	}
 
-	[ConsoleCommand("css_k4toprem", "Removes the closest wall toplist of K4-System")]
+	[ConsoleCommand("css_pointsrem", "Removes the closest list")]
 	[RequiresPermissions("@css/root")]
 	public void OnToplistRemove(CCSPlayerController player, CommandInfo command)
 	{
 		var checkAPI = Capability_SharedAPI.Get();
 		if (checkAPI is null)
 		{
-			command.ReplyToCommand($" {ChatColors.Silver}[ {ChatColors.Lime}K4-TopList {ChatColors.Silver}] {ChatColors.LightRed}Failed to get the shared API.");
+			command.ReplyToCommand($" {ChatColors.Silver}[ {ChatColors.Lime}PointsList {ChatColors.Silver}] {ChatColors.LightRed}Failed to get the shared API.");
 			return;
 		}
 
@@ -170,7 +181,7 @@ public class PluginK4Toplist : BasePlugin, IPluginConfig<PluginConfig>
 
 		if (target is null)
 		{
-			command.ReplyToCommand($" {ChatColors.Silver}[ {ChatColors.Lime}K4-TopList {ChatColors.Silver}] {ChatColors.Red}Move closer to the Toplist that you want to remove.");
+			command.ReplyToCommand($" {ChatColors.Silver}[ {ChatColors.Lime}PointsList {ChatColors.Silver}] {ChatColors.Red}Move closer to the Toplist that you want to remove.");
 			return;
 		}
 
@@ -178,7 +189,7 @@ public class PluginK4Toplist : BasePlugin, IPluginConfig<PluginConfig>
 		_currentTopLists.Remove(target.Id);
 
 		var mapName = Server.MapName;
-		var path = Path.Combine(ModuleDirectory, $"{mapName}_toplists.json");
+		var path = Path.Combine(ModuleDirectory, $"{mapName}_pointslist.json");
 		if (File.Exists(path))
 		{
 			var data = JsonSerializer.Deserialize<List<WorldTextData>>(File.ReadAllText(path));
@@ -189,7 +200,7 @@ public class PluginK4Toplist : BasePlugin, IPluginConfig<PluginConfig>
 			}
 		}
 
-		command.ReplyToCommand($" {ChatColors.Silver}[ {ChatColors.Lime}K4-TopList {ChatColors.Silver}] {ChatColors.Green}Toplist removed!");
+		command.ReplyToCommand($" {ChatColors.Silver}[ {ChatColors.Lime}PointsList {ChatColors.Silver}] {ChatColors.Green}List removed!");
 	}
 
 	private float DistanceTo(Vector a, Vector b)
@@ -203,7 +214,7 @@ public class PluginK4Toplist : BasePlugin, IPluginConfig<PluginConfig>
 	private void SaveWorldTextToFile(Vector location, QAngle rotation)
 	{
 		var mapName = Server.MapName;
-		var path = Path.Combine(ModuleDirectory, $"{mapName}_toplists.json");
+		var path = Path.Combine(ModuleDirectory, $"{mapName}_pointslist.json");
 		var worldTextData = new WorldTextData
 		{
 			Location = location.ToString(),
@@ -228,7 +239,7 @@ public class PluginK4Toplist : BasePlugin, IPluginConfig<PluginConfig>
 	private void LoadWorldTextFromFile()
 	{
 		var mapName = Server.MapName;
-		var path = Path.Combine(ModuleDirectory, $"{mapName}_toplists.json");
+		var path = Path.Combine(ModuleDirectory, $"{mapName}_pointslist.json");
 
 		if (File.Exists(path))
 		{
@@ -308,15 +319,48 @@ public class PluginK4Toplist : BasePlugin, IPluginConfig<PluginConfig>
 		});
 	}
 
+ 	private string TruncateString(string value, int maxLength)
+	{
+		if (string.IsNullOrEmpty(value)) return value;
+		return value.Length <= maxLength ? value : value.Substring(0, maxLength) + "...";
+	}
+
 	private List<TextLine> GetTopListTextLines(List<PlayerPlace> topList)
 	{
+ 		
+		Color ParseColor(string colorName)
+		{
+			try
+			{
+				var colorProperty = typeof(Color).GetProperty(colorName, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+				if (colorProperty == null)
+				{
+					throw new ArgumentException($"Invalid color name: {colorName}");
+				}
+
+				var colorValue = colorProperty.GetValue(null);
+				if (colorValue == null)
+				{
+					throw new InvalidOperationException($"Color property '{colorName}' has no value.");
+				}
+
+				return (Color)colorValue;
+			}
+			catch (Exception ex)
+			{
+				Logger.LogWarning(ex, $"Invalid color name: {colorName}. Falling back to White.");
+				return Color.White;
+			}
+		}
+
+    		int maxNameLength = Config.MaxNameLength;
 		var linesList = new List<TextLine>
 		{
 			new TextLine
 			{
 				Text = Config.TitleText,
-				Color = Color.Pink,
-				FontSize = 24,
+				Color = ParseColor(Config.TitleTextColor),
+				FontSize = 26,
 				FullBright = true,
 				Scale = 0.45f
 			}
@@ -327,15 +371,15 @@ public class PluginK4Toplist : BasePlugin, IPluginConfig<PluginConfig>
 			var topplayer = topList[i];
 			var color = i switch
 			{
-				0 => Color.Red,
-				1 => Color.Orange,
-				2 => Color.Yellow,
-				_ => Color.White
+				0 => ParseColor(Config.FirstPlaceColor),
+				1 => ParseColor(Config.SecondPlaceColor),
+				2 => ParseColor(Config.ThirdPlaceColor),
+				_ => ParseColor(Config.DefaultColor)
 			};
 
 			linesList.Add(new TextLine
 			{
-				Text = $"{i + 1}. {topplayer.Name} - {topplayer.Points} points",
+				Text = $"{i + 1}. {truncatedName} - {topplayer.Points} points",
 				Color = color,
 				FontSize = 24,
 				FullBright = true,
@@ -359,15 +403,15 @@ public class PluginK4Toplist : BasePlugin, IPluginConfig<PluginConfig>
 				string query = $@"
                 WITH RankedPlayers AS (
                     SELECT
-                        steam_id,
-                        name,
-                        points,
-                        DENSE_RANK() OVER (ORDER BY points DESC) AS playerPlace
-                    FROM `{dbSettings.TablePrefix}k4ranks`
+                        SteamID,
+                        PlayerName AS Name,
+                        GlobalPoints AS Points,
+                        DENSE_RANK() OVER (ORDER BY GlobalPoints DESC) AS playerPlace
+                    FROM PlayerStats
                 )
-                SELECT steam_id, name, points, playerPlace
+                SELECT SteamID, Name, Points, playerPlace
                 FROM RankedPlayers
-                ORDER BY points DESC
+                ORDER BY Points DESC
                 LIMIT @TopCount";
 
 				return (await connection.QueryAsync<PlayerPlace>(query, new { TopCount = topCount })).ToList();
