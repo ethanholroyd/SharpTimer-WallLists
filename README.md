@@ -12,7 +12,7 @@
 
   <p align="center">
     <br />
-    <a href="https://github.com/M-archand/SharpTimer-WallLists/releases/">Download (Soon™️)</a>
+    <a href="https://github.com/M-archand/SharpTimer-WallLists/releases/">Download</a>
   </p>
 </div>
 
