@@ -9,6 +9,7 @@
   <h1 align="center">KitsuneLab©</h1>
   <h3 align="center">SharpTimer Points List</h3>
   <a align="center">A simple points list to display top x players on your map walls. Dynamically updates on given interval or if its disabled on round starts.</a>
+  <img src="https://files.catbox.moe/pkarm0.png" alt="" style="margin: 0;">
 
   <p align="center">
     <br />
