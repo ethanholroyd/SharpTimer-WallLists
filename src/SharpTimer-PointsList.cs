@@ -369,6 +369,7 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 		for (int i = 0; i < topList.Count; i++)
 		{
 			var topplayer = topList[i];
+			var truncatedName = TruncateString(topplayer.PlayerName, maxNameLength);
 			var color = i switch
 			{
 				0 => ParseColor(Config.FirstPlaceColor),
@@ -379,7 +380,7 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 
 			linesList.Add(new TextLine
 			{
-				Text = $"{i + 1}. {truncatedName} - {topplayer.Points} points",
+				Text = $"{i + 1}. {truncatedName} - {topplayer.GlobalPoints} points",
 				Color = color,
 				FontSize = 24,
 				FullBright = true,
@@ -404,14 +405,14 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
                 WITH RankedPlayers AS (
                     SELECT
                         SteamID,
-                        PlayerName AS Name,
-                        GlobalPoints AS Points,
+                        PlayerName,
+                        GlobalPoints,
                         DENSE_RANK() OVER (ORDER BY GlobalPoints DESC) AS playerPlace
                     FROM PlayerStats
                 )
-                SELECT SteamID, Name, Points, playerPlace
+                SELECT SteamID, PlayerName, GlobalPoints, playerPlace
                 FROM RankedPlayers
-                ORDER BY Points DESC
+                ORDER BY GlobalPoints DESC
                 LIMIT @TopCount";
 
 				return (await connection.QueryAsync<PlayerPlace>(query, new { TopCount = topCount })).ToList();
@@ -427,8 +428,8 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 
 public class PlayerPlace
 {
-	public required string Name { get; set; }
-	public int Points { get; set; }
+	public required string PlayerName { get; set; }
+	public int GlobalPoints { get; set; }
 	public int Placement { get; set; }
 }
 
