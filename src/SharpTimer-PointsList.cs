@@ -201,10 +201,16 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 						   location.Y == entityVector.Y &&
 						   x.Rotation == target.Entity.AbsRotation.ToString();
 				});
-				File.WriteAllText(path, JsonSerializer.Serialize(data));
+
+				var options = new JsonSerializerOptions
+				{
+					WriteIndented = true
+				};
+
+				string jsonString = JsonSerializer.Serialize(data, options);
+				File.WriteAllText(path, jsonString);
 			}
 		}
-
 		command.ReplyToCommand($" {ChatColors.Silver}[ {ChatColors.Lime}PointsList {ChatColors.Silver}] {ChatColors.Green}List removed!");
 	}
 
@@ -238,7 +244,13 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 
 		data.Add(worldTextData);
 
-		File.WriteAllText(path, JsonSerializer.Serialize(data));
+		var options = new JsonSerializerOptions
+		{
+			WriteIndented = true
+		};
+
+		string jsonString = JsonSerializer.Serialize(data, options);
+		File.WriteAllText(path, jsonString);
 	}
 
 	private void LoadWorldTextFromFile()
