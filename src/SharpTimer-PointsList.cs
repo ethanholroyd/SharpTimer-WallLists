@@ -84,7 +84,7 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 
 	public override void OnAllPluginsLoaded(bool hotReload)
 	{
-		AddTimer(3, LoadWorldTextFromFile);
+		AddTimer(3, () => LoadWorldTextFromFile());
 
 		if (Config.TimeBasedUpdate)
 		{
@@ -99,18 +99,24 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 
 		RegisterListener<Listeners.OnMapStart>((mapName) =>
 		{
-			AddTimer(1, LoadWorldTextFromFile);
+			Logger.LogInformation("Loading toplists for map: {0}", mapName);
+			AddTimer(1, () => LoadWorldTextFromFile(mapName));
 		});
 
 		RegisterListener<Listeners.OnMapEnd>(() =>
 		{
+			var checkAPI = Capability_SharedAPI.Get();
+			if (checkAPI != null)
+				_currentTopLists.ForEach(id => checkAPI.RemoveWorldText(id, false));
 			_currentTopLists.Clear();
 		});
 	}
 
 	public override void Unload(bool hotReload)
 	{
-		_currentTopLists.ForEach(id => Capability_SharedAPI.Get()?.RemoveWorldText(id));
+		var checkAPI = Capability_SharedAPI.Get();
+		if (checkAPI != null)
+			_currentTopLists.ForEach(id => checkAPI.RemoveWorldText(id, false));
 		_currentTopLists.Clear();
 		_updateTimer?.Kill();
 	}
@@ -182,7 +188,7 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 			return;
 		}
 
-		checkAPI.RemoveWorldText(target.Id);
+		checkAPI.RemoveWorldText(target.Id, false);
 		_currentTopLists.Remove(target.Id);
 
 		var mapName = Server.MapName;
@@ -253,9 +259,9 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 		File.WriteAllText(path, jsonString);
 	}
 
-	private void LoadWorldTextFromFile()
+	private void LoadWorldTextFromFile(string? passedMapName = null)
 	{
-		var mapName = Server.MapName;
+		var mapName = passedMapName ?? Server.MapName;
 		var path = Path.Combine(ModuleDirectory, $"{mapName}_pointslist.json");
 
 		if (File.Exists(path))
@@ -321,17 +327,11 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 
 			Server.NextWorldUpdate(() =>
 			{
-				AddTimer(1, () =>
+				var checkAPI = Capability_SharedAPI.Get();
+				if (checkAPI != null)
 				{
-					var checkAPI = Capability_SharedAPI.Get();
-					if (checkAPI != null)
-					{
-						foreach (int messageID in _currentTopLists)
-						{
-							checkAPI.UpdateWorldText(messageID, linesList);
-						}
-					}
-				});
+					_currentTopLists.ForEach(id => checkAPI.UpdateWorldText(id, linesList));
+				}
 			});
 		});
 	}
