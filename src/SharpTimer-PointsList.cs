@@ -44,7 +44,7 @@ public class PluginConfig : BasePluginConfig
 	public string ThirdPlaceColor { get; set; } = "Cyan";
 	[JsonPropertyName("DefaultColor")]
 	public string DefaultColor { get; set; } = "White";
-	[JsonPropertyName("LineFontSize")]
+	[JsonPropertyName("ListFontSize")]
     public int ListFontSize { get; set; } = 24;
 	[JsonPropertyName("ConfigVersion")]
 	public override int Version { get; set; } = 5;
