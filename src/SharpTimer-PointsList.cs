@@ -103,7 +103,6 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 
 		RegisterListener<Listeners.OnMapStart>((mapName) =>
 		{
-			Logger.LogInformation("Loading toplists for map: {0}", mapName);
 			AddTimer(1, () => LoadWorldTextFromFile(mapName));
 		});
 
