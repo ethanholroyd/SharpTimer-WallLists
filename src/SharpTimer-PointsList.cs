@@ -29,21 +29,25 @@ public class PluginConfig : BasePluginConfig
 	public DatabaseSettings DatabaseSettings { get; set; } = new DatabaseSettings();
 	[JsonPropertyName("TitleText")]
 	public string TitleText { get; set; } = "-- Server Points Leaders --";
+	[JsonPropertyName("TitleFontSize")]
+    public int TitleFontSize { get; set; } = 26;
  	[JsonPropertyName("MaxNameLength")]
 	public int MaxNameLength { get; set; } = 32; // Default value, 32 is max Steam name length
 	//List Colors
 	[JsonPropertyName("TitleTextColor")]
-	public string TitleTextColor { get; set; } = "Pink"; // Default=Pink
+	public string TitleTextColor { get; set; } = "Pink";
 	[JsonPropertyName("FirstPlaceColor")]
-	public string FirstPlaceColor { get; set; } = "Lime"; // Default=Lime
+	public string FirstPlaceColor { get; set; } = "Lime";
 	[JsonPropertyName("SecondPlaceColor")]
-	public string SecondPlaceColor { get; set; } = "Magenta"; // Default=Magenta
+	public string SecondPlaceColor { get; set; } = "Magenta";
 	[JsonPropertyName("ThirdPlaceColor")]
-	public string ThirdPlaceColor { get; set; } = "Cyan"; // Default=Cyan
+	public string ThirdPlaceColor { get; set; } = "Cyan";
 	[JsonPropertyName("DefaultColor")]
-	public string DefaultColor { get; set; } = "White"; // Default=White
+	public string DefaultColor { get; set; } = "White";
+	[JsonPropertyName("LineFontSize")]
+    public int ListFontSize { get; set; } = 24;
 	[JsonPropertyName("ConfigVersion")]
-	public override int Version { get; set; } = 4;
+	public override int Version { get; set; } = 5;
 }
 
 public sealed class DatabaseSettings
@@ -67,11 +71,11 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 {
 	public override string ModuleName => "SharpTimer Points List";
 	public override string ModuleAuthor => "K4ryuu (SharpTimer edit by Marchand)";
-	public override string ModuleVersion => "1.0.2";
+	public override string ModuleVersion => "1.0.3";
 	public required PluginConfig Config { get; set; } = new PluginConfig();
 	public static PluginCapability<IK4WorldTextSharedAPI> Capability_SharedAPI { get; } = new("k4-worldtext:sharedapi");
 
-	private List<int> _currentTopLists = new();
+	private List<int> _currentPointsList = new();
 	private CounterStrikeSharp.API.Modules.Timers.Timer? _updateTimer;
 
 	public void OnConfigParsed(PluginConfig config)
@@ -107,8 +111,8 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 		{
 			var checkAPI = Capability_SharedAPI.Get();
 			if (checkAPI != null)
-				_currentTopLists.ForEach(id => checkAPI.RemoveWorldText(id, false));
-			_currentTopLists.Clear();
+				_currentPointsList.ForEach(id => checkAPI.RemoveWorldText(id, false));
+			_currentPointsList.Clear();
 		});
 	}
 
@@ -116,8 +120,8 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 	{
 		var checkAPI = Capability_SharedAPI.Get();
 		if (checkAPI != null)
-			_currentTopLists.ForEach(id => checkAPI.RemoveWorldText(id, false));
-		_currentTopLists.Clear();
+			_currentPointsList.ForEach(id => checkAPI.RemoveWorldText(id, false));
+		_currentPointsList.Clear();
 		_updateTimer?.Kill();
 	}
 
@@ -140,7 +144,7 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 			Server.NextWorldUpdate(() =>
 			{
 				int messageID = checkAPI.AddWorldTextAtPlayer(player, TextPlacement.Wall, linesList);
-				_currentTopLists.Add(messageID);
+				_currentPointsList.Add(messageID);
 
 				var lineList = checkAPI.GetWorldTextLineEntities(messageID);
 				if (lineList?.Count > 0)
@@ -176,7 +180,7 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 			return;
 		}
 
-		var target = _currentTopLists
+		var target = _currentPointsList
 			.SelectMany(id => checkAPI.GetWorldTextLineEntities(id)?.Select(entity => new { Id = id, Entity = entity }) ?? Enumerable.Empty<dynamic>())
 			.Where(x => x.Entity.AbsOrigin != null && player.PlayerPawn.Value?.AbsOrigin != null && DistanceTo(x.Entity.AbsOrigin, player.PlayerPawn.Value!.AbsOrigin) < 100)
 			.OrderBy(x => x.Entity.AbsOrigin != null && player.PlayerPawn.Value?.AbsOrigin != null ? DistanceTo(x.Entity.AbsOrigin, player.PlayerPawn.Value!.AbsOrigin) : float.MaxValue)
@@ -189,7 +193,7 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 		}
 
 		checkAPI.RemoveWorldText(target.Id, false);
-		_currentTopLists.Remove(target.Id);
+		_currentPointsList.Remove(target.Id);
 
 		var mapName = Server.MapName;
 		var path = Path.Combine(ModuleDirectory, $"{mapName}_pointslist.json");
@@ -284,7 +288,7 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 						if (!string.IsNullOrEmpty(worldTextData.Location) && !string.IsNullOrEmpty(worldTextData.Rotation))
 						{
 							var messageID = checkAPI.AddWorldText(TextPlacement.Wall, linesList, ParseVector(worldTextData.Location), ParseQAngle(worldTextData.Rotation));
-							_currentTopLists.Add(messageID);
+							_currentPointsList.Add(messageID);
 						}
 					}
 				});
@@ -330,7 +334,7 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 				var checkAPI = Capability_SharedAPI.Get();
 				if (checkAPI != null)
 				{
-					_currentTopLists.ForEach(id => checkAPI.UpdateWorldText(id, linesList));
+					_currentPointsList.ForEach(id => checkAPI.UpdateWorldText(id, linesList));
 				}
 			});
 		});
@@ -377,7 +381,7 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 			{
 				Text = Config.TitleText,
 				Color = ParseColor(Config.TitleTextColor),
-				FontSize = 26,
+				FontSize = Config.TitleFontSize,
 				FullBright = true,
 				Scale = 0.45f
 			}
@@ -399,7 +403,7 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 			{
 				Text = $"{i + 1}. {truncatedName} - {topplayer.GlobalPoints} points",
 				Color = color,
-				FontSize = 24,
+				FontSize = Config.ListFontSize,
 				FullBright = true,
 				Scale = 0.35f,
 			});
