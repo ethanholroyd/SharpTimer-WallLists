@@ -31,8 +31,12 @@ public class PluginConfig : BasePluginConfig
 	public string TitleText { get; set; } = "-- Server Points Leaders --";
 	[JsonPropertyName("TitleFontSize")]
     public int TitleFontSize { get; set; } = 26;
+	[JsonPropertyName("TitleTextScale")]
+    public float TitleTextScale { get; set; } = 0.45f;
 	[JsonPropertyName("ListFontSize")]
     public int ListFontSize { get; set; } = 24;
+	[JsonPropertyName("ListTextScale")]
+    public float ListTextScale { get; set; } = 0.35f;
  	[JsonPropertyName("MaxNameLength")]
 	public int MaxNameLength { get; set; } = 32; // Default value, 32 is max Steam name length
 	//List Colors
@@ -382,7 +386,7 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 				Color = ParseColor(Config.TitleTextColor),
 				FontSize = Config.TitleFontSize,
 				FullBright = true,
-				Scale = 0.45f
+				Scale = Config.TitleTextScale
 			}
 		};
 
@@ -404,7 +408,7 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 				Color = color,
 				FontSize = Config.ListFontSize,
 				FullBright = true,
-				Scale = 0.35f,
+				Scale = Config.ListTextScale
 			});
 		}
 
