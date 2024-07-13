@@ -31,6 +31,8 @@ public class PluginConfig : BasePluginConfig
 	public string TitleText { get; set; } = "-- Server Points Leaders --";
 	[JsonPropertyName("TitleFontSize")]
     public int TitleFontSize { get; set; } = 26;
+	[JsonPropertyName("ListFontSize")]
+    public int ListFontSize { get; set; } = 24;
  	[JsonPropertyName("MaxNameLength")]
 	public int MaxNameLength { get; set; } = 32; // Default value, 32 is max Steam name length
 	//List Colors
@@ -44,8 +46,6 @@ public class PluginConfig : BasePluginConfig
 	public string ThirdPlaceColor { get; set; } = "Cyan";
 	[JsonPropertyName("DefaultColor")]
 	public string DefaultColor { get; set; } = "White";
-	[JsonPropertyName("ListFontSize")]
-    public int ListFontSize { get; set; } = 24;
 	[JsonPropertyName("ConfigVersion")]
 	public override int Version { get; set; } = 5;
 }
@@ -92,12 +92,12 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 
 		if (Config.TimeBasedUpdate)
 		{
-			_updateTimer = AddTimer(Config.UpdateInterval, RefreshTopLists, TimerFlags.REPEAT);
+			_updateTimer = AddTimer(Config.UpdateInterval, RefreshPointsList, TimerFlags.REPEAT);
 		}
 
 		RegisterEventHandler((EventRoundStart @event, GameEventInfo info) =>
 		{
-			RefreshTopLists();
+			RefreshPointsList();
 			return HookResult.Continue;
 		});
 
@@ -187,7 +187,7 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 
 		if (target is null)
 		{
-			command.ReplyToCommand($" {ChatColors.Silver}[ {ChatColors.Lime}PointsList {ChatColors.Silver}] {ChatColors.Red}Move closer to the Toplist that you want to remove.");
+			command.ReplyToCommand($" {ChatColors.Silver}[ {ChatColors.Lime}PointsList {ChatColors.Silver}] {ChatColors.Red}Move closer to the points list that you want to remove.");
 			return;
 		}
 
@@ -321,7 +321,7 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 		throw new ArgumentException("Invalid QAngle string format.");
 	}
 
-	private void RefreshTopLists()
+	private void RefreshPointsList()
 	{
 		Task.Run(async () =>
 		{
