@@ -68,6 +68,9 @@ public sealed class DatabaseSettings
 	public int Port { get; set; } = 3306;
 	[JsonPropertyName("sslmode")]
 	public string Sslmode { get; set; } = "none";
+	[JsonPropertyName("DatabaseType")]
+	public int DatabaseType { get; set; } = 1; // 1 = MySQL, 2 = SQLite. 3 = Postgres
+
 }
 
 [MinimumApiVersion(205)]
@@ -81,6 +84,7 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 
 	private List<int> _currentPointsList = new();
 	private CounterStrikeSharp.API.Modules.Timers.Timer? _updateTimer;
+	private string SQLiteDatabasePath => $"{Server.GameDirectory}/csgo/cfg/SharpTimer/database.db";
 
 	public void OnConfigParsed(PluginConfig config)
 	{
