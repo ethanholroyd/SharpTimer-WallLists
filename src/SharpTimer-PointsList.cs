@@ -9,11 +9,13 @@ using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Utils;
 using Dapper;
+using System.Data.SQLite;
 using K4WorldTextSharedAPI;
 using Microsoft.Extensions.Logging;
 using MySqlConnector;
 using System.Text.Json;
 using CounterStrikeSharp.API.Modules.Timers;
+using Npgsql;
 
 namespace SharpTimerPointsList;
 
@@ -25,6 +27,8 @@ public class PluginConfig : BasePluginConfig
 	public bool TimeBasedUpdate { get; set; } = false;
 	[JsonPropertyName("UpdateInterval")]
 	public int UpdateInterval { get; set; } = 60;
+	[JsonPropertyName("DatabaseType")]
+	public int DatabaseType { get; set; } = 1; // 1 = MySQL, 2 = SQLite. 3 = Postgres
 	[JsonPropertyName("DatabaseSettings")]
 	public DatabaseSettings DatabaseSettings { get; set; } = new DatabaseSettings();
 	[JsonPropertyName("TitleText")]
@@ -68,9 +72,6 @@ public sealed class DatabaseSettings
 	public int Port { get; set; } = 3306;
 	[JsonPropertyName("sslmode")]
 	public string Sslmode { get; set; } = "none";
-	[JsonPropertyName("DatabaseType")]
-	public int DatabaseType { get; set; } = 1; // 1 = MySQL, 2 = SQLite. 3 = Postgres
-
 }
 
 [MinimumApiVersion(205)]
@@ -81,10 +82,10 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 	public override string ModuleVersion => "1.0.3";
 	public required PluginConfig Config { get; set; } = new PluginConfig();
 	public static PluginCapability<IK4WorldTextSharedAPI> Capability_SharedAPI { get; } = new("k4-worldtext:sharedapi");
-
 	private List<int> _currentPointsList = new();
 	private CounterStrikeSharp.API.Modules.Timers.Timer? _updateTimer;
-	private string SQLiteDatabasePath => $"{Server.GameDirectory}/csgo/cfg/SharpTimer/database.db";
+	private string _gameDirectory = Server.GameDirectory;
+	
 
 	public void OnConfigParsed(PluginConfig config)
 	{
@@ -96,6 +97,14 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 
 	public override void OnAllPluginsLoaded(bool hotReload)
 	{
+		_gameDirectory = Server.GameDirectory;
+
+        if (string.IsNullOrEmpty(_gameDirectory))
+        {
+            Logger.LogError("Game directory is not initialized");
+            return;
+        }
+
 		AddTimer(3, () => LoadWorldTextFromFile());
 
 		if (Config.TimeBasedUpdate)
@@ -130,6 +139,20 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 			_currentPointsList.ForEach(id => checkAPI.RemoveWorldText(id, false));
 		_currentPointsList.Clear();
 		_updateTimer?.Kill();
+	}
+
+	private string GetSQLiteDatabasePath()
+	{
+		if (string.IsNullOrEmpty(_gameDirectory))
+		{
+			Logger.LogError("Game directory not initialized or empty");
+			throw new InvalidOperationException("Game directory not initialized or empty");
+		}
+
+		string databasePath = Path.Combine(_gameDirectory, "csgo", "cfg", "SharpTimer", "database.db");
+		Logger.LogDebug($"Database file path: {databasePath}");
+
+		return databasePath;
 	}
 
 	[ConsoleCommand("css_pointslist", "Sets up the points list")]
@@ -424,28 +447,61 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 		try
 		{
 			var dbSettings = Config.DatabaseSettings;
-
-			using (var connection = new MySqlConnection($@"Server={dbSettings.Host};Port={dbSettings.Port};Database={dbSettings.Database};
-				Uid={dbSettings.Username};Pwd={dbSettings.Password};
-				SslMode={Enum.Parse<MySqlSslMode>(dbSettings.Sslmode, true)};"))
+			
+			if (Config.DatabaseType == 1)
 			{
-				string query = $@"
-                WITH RankedPlayers AS (
-                    SELECT
-                        SteamID,
-                        PlayerName,
-                        GlobalPoints,
-                        DENSE_RANK() OVER (ORDER BY GlobalPoints DESC) AS playerPlace
-                    FROM PlayerStats
-                )
-                SELECT SteamID, PlayerName, GlobalPoints, playerPlace
-                FROM RankedPlayers
-                ORDER BY GlobalPoints DESC
-                LIMIT @TopCount";
+				using (var connection = new MySqlConnection($@"Server={dbSettings.Host};Port={dbSettings.Port};Database={dbSettings.Database};
+					Uid={dbSettings.Username};Pwd={dbSettings.Password};
+					SslMode={Enum.Parse<MySqlSslMode>(dbSettings.Sslmode, true)};"))
+				{
+					string query = $@"
+					WITH RankedPlayers AS (
+						SELECT
+							SteamID,
+							PlayerName,
+							GlobalPoints,
+							DENSE_RANK() OVER (ORDER BY GlobalPoints DESC) AS playerPlace
+						FROM PlayerStats
+					)
+					SELECT SteamID, PlayerName, GlobalPoints, playerPlace
+					FROM RankedPlayers
+					ORDER BY GlobalPoints DESC
+					LIMIT @TopCount";
 
-				return (await connection.QueryAsync<PlayerPlace>(query, new { TopCount = topCount })).ToList();
+					return (await connection.QueryAsync<PlayerPlace>(query, new { TopCount = topCount })).ToList();
+				}
+			}
+			else if (Config.DatabaseType == 2)
+			{
+				string connectionString = $"Data Source={GetSQLiteDatabasePath()};Version=3;";
+
+				using (var connection = new SQLiteConnection(connectionString))
+				{
+					connection.Open();
+					string query = $@"
+					WITH RankedPlayers AS (
+						SELECT
+							SteamID,
+							PlayerName,
+							GlobalPoints,
+							DENSE_RANK() OVER (ORDER BY GlobalPoints DESC) AS playerPlace
+						FROM PlayerStats
+					)
+					SELECT SteamID, PlayerName, GlobalPoints, playerPlace
+					FROM RankedPlayers
+					ORDER BY GlobalPoints DESC
+					LIMIT @TopCount";
+
+					return (await connection.QueryAsync<PlayerPlace>(query, new { TopCount = topCount })).ToList();
+				}
+			}
+			else
+			{
+				Logger.LogError("Invalid DatabaseType specified in config");
+				return new List<PlayerPlace>();
 			}
 		}
+		
 		catch (Exception ex)
 		{
 			Logger.LogError(ex, "Failed to retrieve top players");
