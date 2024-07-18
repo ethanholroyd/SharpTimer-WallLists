@@ -2,8 +2,7 @@
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
     <DebugSymbols>False</DebugSymbols>
     <DebugType>None</DebugType>
-    <GenerateDependencyFile>false</GenerateDependencyFile>
-    <PublishDir>./bin/K4-System-WallToplist/</PublishDir>
+    <GenerateDependencyFile>true</GenerateDependencyFile>
   </PropertyGroup>
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -20,7 +19,6 @@
     <PackageReference Include="MySqlConnector" Version="2.3.7" />
     <PackageReference Include="Npgsql" Version="8.0.3" />
     <PackageReference Include="System.Data.SQLite" Version="1.0.118" />
-    <PackageReference Include="System.Data.SQLite.EF6" Version="1.0.118" />
     <Reference Include="K4WorldTextSharedApi">
       <HintPath>C:\Users\alexr\Desktop\SharpTimer-WallLists\K4-WorldText-SharedAPI.dll</HintPath>
       <Private>true</Private>
