@@ -1,5 +1,3 @@
-using System.Drawing;
-using System.Text.Json.Serialization;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes;
@@ -8,13 +6,15 @@ using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Utils;
-using Dapper;
-using System.Data.SQLite;
+using CounterStrikeSharp.API.Modules.Timers;
 using K4WorldTextSharedAPI;
+using System.Drawing;
+using System.Data.SQLite;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Dapper;
 using Microsoft.Extensions.Logging;
 using MySqlConnector;
-using System.Text.Json;
-using CounterStrikeSharp.API.Modules.Timers;
 using Npgsql;
 
 namespace SharpTimerPointsList;
@@ -85,6 +85,8 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 	private List<int> _currentPointsList = new();
 	private CounterStrikeSharp.API.Modules.Timers.Timer? _updateTimer;
 	private string _gameDirectory = Server.GameDirectory;
+	private string? _databasePath;
+    private string? _connectionString;
 	
 
 	public void OnConfigParsed(PluginConfig config)
@@ -97,13 +99,7 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 
 	public override void OnAllPluginsLoaded(bool hotReload)
 	{
-		_gameDirectory = Server.GameDirectory;
-
-        if (string.IsNullOrEmpty(_gameDirectory))
-        {
-            Logger.LogError("Game directory is not initialized");
-            return;
-        }
+        InitializeDatabasePathAndConnectionString();
 
 		AddTimer(3, () => LoadWorldTextFromFile());
 
@@ -140,19 +136,13 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 		_currentPointsList.Clear();
 		_updateTimer?.Kill();
 	}
-
-	private string GetSQLiteDatabasePath()
+	private void InitializeDatabasePathAndConnectionString()
 	{
-		if (string.IsNullOrEmpty(_gameDirectory))
+		if (Config.DatabaseType == 2)
 		{
-			Logger.LogError("Game directory not initialized or empty");
-			throw new InvalidOperationException("Game directory not initialized or empty");
+			_databasePath = Path.Combine(_gameDirectory, "csgo", "cfg", "SharpTimer", "database.db");
+			_connectionString = $"Data Source={_databasePath};Version=3;";
 		}
-
-		string databasePath = Path.Combine(_gameDirectory, "csgo", "cfg", "SharpTimer", "database.db");
-		Logger.LogDebug($"Database file path: {databasePath}");
-
-		return databasePath;
 	}
 
 	[ConsoleCommand("css_pointslist", "Sets up the points list")]
@@ -444,11 +434,11 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 
 	public async Task<List<PlayerPlace>> GetTopPlayersAsync(int topCount)
 	{
-		try
+		var dbSettings = Config.DatabaseSettings;
+		
+		if (Config.DatabaseType == 1)
 		{
-			var dbSettings = Config.DatabaseSettings;
-			
-			if (Config.DatabaseType == 1)
+			try
 			{
 				using (var connection = new MySqlConnection($@"Server={dbSettings.Host};Port={dbSettings.Port};Database={dbSettings.Database};
 					Uid={dbSettings.Username};Pwd={dbSettings.Password};
@@ -470,12 +460,18 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 
 					return (await connection.QueryAsync<PlayerPlace>(query, new { TopCount = topCount })).ToList();
 				}
+				
 			}
-			else if (Config.DatabaseType == 2)
+			catch (Exception ex)
 			{
-				string connectionString = $"Data Source={GetSQLiteDatabasePath()};Version=3;";
-
-				using (var connection = new SQLiteConnection(connectionString))
+				Logger.LogError(ex, "Failed to retrieve top players from MySQL, please check your database credentials in the config");
+				return new List<PlayerPlace>();
+			}
+		}
+		
+		else if (Config.DatabaseType == 2)
+		{
+				using (var connection = new SQLiteConnection(_connectionString))
 				{
 					connection.Open();
 					string query = $@"
@@ -494,17 +490,10 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 
 					return (await connection.QueryAsync<PlayerPlace>(query, new { TopCount = topCount })).ToList();
 				}
-			}
-			else
-			{
-				Logger.LogError("Invalid DatabaseType specified in config");
-				return new List<PlayerPlace>();
-			}
 		}
-		
-		catch (Exception ex)
+		else
 		{
-			Logger.LogError(ex, "Failed to retrieve top players");
+			Logger.LogError("Invalid DatabaseType specified in config");
 			return new List<PlayerPlace>();
 		}
 	}
