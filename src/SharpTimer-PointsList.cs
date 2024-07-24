@@ -141,7 +141,16 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 		var dbSettings = Config.DatabaseSettings;
 		if (Config.DatabaseType == 1)
 		{
-			_connectionString = $@"Server={dbSettings.Host};Port={dbSettings.Port};Database={dbSettings.Database};Uid={dbSettings.Username};Pwd={dbSettings.Password};SslMode={Enum.Parse<MySqlSslMode>(dbSettings.Sslmode, true)};";
+			var mySqlSslMode = dbSettings.Sslmode.ToLower() switch
+			{
+				"none" => MySqlSslMode.None,
+				"preferred" => MySqlSslMode.Preferred,
+				"required" => MySqlSslMode.Required,
+				"verifyca" => MySqlSslMode.VerifyCA,
+				"verifyfull" => MySqlSslMode.VerifyFull,
+				_ => MySqlSslMode.None
+			};
+			_connectionString = $@"Server={dbSettings.Host};Port={dbSettings.Port};Database={dbSettings.Database};Uid={dbSettings.Username};Pwd={dbSettings.Password};SslMode={mySqlSslMode};";
 		}
 		else if (Config.DatabaseType == 2)
 		{
@@ -150,7 +159,16 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 		}
 		else if (Config.DatabaseType == 3)
 		{
-			_connectionString = $"Host={dbSettings.Host};Port={dbSettings.Port};Database={dbSettings.Database};Username={dbSettings.Username};Password={dbSettings.Password};SslMode={Enum.Parse<Npgsql.SslMode>(dbSettings.Sslmode, true)};";
+		var npgSqlSslMode = dbSettings.Sslmode.ToLower() switch
+			{
+				"disable" => SslMode.Disable,
+				"require" => SslMode.Require,
+				"prefer" => SslMode.Prefer,
+				"allow" => SslMode.Allow,
+				"verify-full" => SslMode.VerifyFull,
+				_ => SslMode.Disable
+			};
+			_connectionString = $"Host={dbSettings.Host};Port={dbSettings.Port};Database={dbSettings.Database};Username={dbSettings.Username};Password={dbSettings.Password};SslMode={npgSqlSslMode};";
 		}
 	}
 
@@ -503,7 +521,6 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 			{
 				using (var connection = new NpgsqlConnection(_connectionString))
 				{
-					await connection.OpenAsync();
 					string query = $@"
 					WITH RankedPlayers AS (
 						SELECT
