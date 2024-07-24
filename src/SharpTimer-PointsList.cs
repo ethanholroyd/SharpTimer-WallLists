@@ -55,7 +55,7 @@ public class PluginConfig : BasePluginConfig
 	[JsonPropertyName("DefaultColor")]
 	public string DefaultColor { get; set; } = "White";
 	[JsonPropertyName("ConfigVersion")]
-	public override int Version { get; set; } = 5;
+	public override int Version { get; set; } = 6;
 }
 
 public sealed class DatabaseSettings
@@ -79,7 +79,7 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 {
 	public override string ModuleName => "SharpTimer Points List";
 	public override string ModuleAuthor => "K4ryuu (SharpTimer edit by Marchand)";
-	public override string ModuleVersion => "1.0.3";
+	public override string ModuleVersion => "1.0.4";
 	public required PluginConfig Config { get; set; } = new PluginConfig();
 	public static PluginCapability<IK4WorldTextSharedAPI> Capability_SharedAPI { get; } = new("k4-worldtext:sharedapi");
 	private List<int> _currentPointsList = new();
