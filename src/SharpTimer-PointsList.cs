@@ -138,10 +138,19 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 	}
 	private void InitializeDatabasePathAndConnectionString()
 	{
-		if (Config.DatabaseType == 2)
+		var dbSettings = Config.DatabaseSettings;
+		if (Config.DatabaseType == 1)
+		{
+			_connectionString = $@"Server={dbSettings.Host};Port={dbSettings.Port};Database={dbSettings.Database};Uid={dbSettings.Username};Pwd={dbSettings.Password};SslMode={Enum.Parse<MySqlSslMode>(dbSettings.Sslmode, true)};";
+		}
+		else if (Config.DatabaseType == 2)
 		{
 			_databasePath = Path.Combine(_gameDirectory, "csgo", "cfg", "SharpTimer", "database.db");
 			_connectionString = $"Data Source={_databasePath};Version=3;";
+		}
+		else if (Config.DatabaseType == 3)
+		{
+			_connectionString = $"Host={dbSettings.Host};Port={dbSettings.Port};Database={dbSettings.Database};Username={dbSettings.Username};Password={dbSettings.Password};SslMode={Enum.Parse<Npgsql.SslMode>(dbSettings.Sslmode, true)};";
 		}
 	}
 
@@ -434,15 +443,13 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 
 	public async Task<List<PlayerPlace>> GetTopPlayersAsync(int topCount)
 	{
-		var dbSettings = Config.DatabaseSettings;
+		
 		
 		if (Config.DatabaseType == 1)
 		{
 			try
 			{
-				using (var connection = new MySqlConnection($@"Server={dbSettings.Host};Port={dbSettings.Port};Database={dbSettings.Database};
-					Uid={dbSettings.Username};Pwd={dbSettings.Password};
-					SslMode={Enum.Parse<MySqlSslMode>(dbSettings.Sslmode, true)};"))
+				using (var connection = new MySqlConnection(_connectionString))
 				{
 					string query = $@"
 					WITH RankedPlayers AS (
@@ -460,7 +467,6 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 
 					return (await connection.QueryAsync<PlayerPlace>(query, new { TopCount = topCount })).ToList();
 				}
-				
 			}
 			catch (Exception ex)
 			{
@@ -471,25 +477,55 @@ public class PluginSharpTimerPointsList : BasePlugin, IPluginConfig<PluginConfig
 		
 		else if (Config.DatabaseType == 2)
 		{
-				using (var connection = new SQLiteConnection(_connectionString))
+			using (var connection = new SQLiteConnection(_connectionString))
+			{
+				connection.Open();
+				string query = $@"
+				WITH RankedPlayers AS (
+					SELECT
+						SteamID,
+						PlayerName,
+						GlobalPoints,
+						DENSE_RANK() OVER (ORDER BY GlobalPoints DESC) AS playerPlace
+					FROM PlayerStats
+				)
+				SELECT SteamID, PlayerName, GlobalPoints, playerPlace
+				FROM RankedPlayers
+				ORDER BY GlobalPoints DESC
+				LIMIT @TopCount";
+
+				return (await connection.QueryAsync<PlayerPlace>(query, new { TopCount = topCount })).ToList();
+			}
+		}
+		else if (Config.DatabaseType == 3)
+		{
+			try
+			{
+				using (var connection = new NpgsqlConnection(_connectionString))
 				{
-					connection.Open();
+					await connection.OpenAsync();
 					string query = $@"
 					WITH RankedPlayers AS (
 						SELECT
-							SteamID,
-							PlayerName,
-							GlobalPoints,
-							DENSE_RANK() OVER (ORDER BY GlobalPoints DESC) AS playerPlace
-						FROM PlayerStats
+							""SteamID"",
+							""PlayerName"",
+							""GlobalPoints"",
+							DENSE_RANK() OVER (ORDER BY ""GlobalPoints"" DESC) AS playerPlace
+						FROM ""PlayerStats""
 					)
-					SELECT SteamID, PlayerName, GlobalPoints, playerPlace
+					SELECT ""SteamID"", ""PlayerName"", ""GlobalPoints"", playerPlace
 					FROM RankedPlayers
-					ORDER BY GlobalPoints DESC
+					ORDER BY ""GlobalPoints"" DESC
 					LIMIT @TopCount";
 
 					return (await connection.QueryAsync<PlayerPlace>(query, new { TopCount = topCount })).ToList();
 				}
+			}
+			catch (Exception ex)
+			{
+				Logger.LogError(ex, "Failed to retrieve top players from PostgreSQL, please check your database credentials in the config");
+				return new List<PlayerPlace>();
+			}
 		}
 		else
 		{
