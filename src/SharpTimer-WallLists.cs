@@ -223,18 +223,11 @@ namespace SharpTimerWallLists
             CreateTopList(player, command, ListType.Maps);
         }
 
-        [ConsoleCommand("css_pointsrem", "Removes the closest points list")]
+        [ConsoleCommand("css_remlist", "Removes the closest list, whether points or map")]
         [RequiresPermissions("@css/root")]
-        public void OnPointsListRemove(CCSPlayerController player, CommandInfo command)
+        public void OnRemoveList(CCSPlayerController player, CommandInfo command)
         {
-            RemoveTopList(player, command, ListType.Points);
-        }
-
-        [ConsoleCommand("css_maprem", "Removes the closest map list")]
-        [RequiresPermissions("@css/root")]
-        public void OnMapListRemove(CCSPlayerController player, CommandInfo command)
-        {
-            RemoveTopList(player, command, ListType.Maps);
+            RemoveClosestList(player, command);
         }
 
         private void CreateTopList(CCSPlayerController player, CommandInfo command, ListType listType)
@@ -290,36 +283,45 @@ namespace SharpTimerWallLists
             });
         }
 
-        private void RemoveTopList(CCSPlayerController player, CommandInfo command, ListType listType)
+        private void RemoveClosestList(CCSPlayerController player, CommandInfo command)
         {
             var checkAPI = Capability_SharedAPI.Get();
             if (checkAPI is null)
             {
-                command.ReplyToCommand($" {ChatColors.Silver}[ {ChatColors.Lime}{listType}List {ChatColors.Silver}] {ChatColors.LightRed}Failed to get the shared API.");
+                command.ReplyToCommand($" {ChatColors.Silver}[ {ChatColors.Lime}List {ChatColors.Silver}] {ChatColors.LightRed}Failed to get the shared API.");
                 return;
             }
 
-            var currentList = listType == ListType.Points ? _currentPointsList : _currentMapList;
+            var combinedList = _currentPointsList.Concat(_currentMapList).ToList();
 
-            var target = currentList
-                .SelectMany(id => checkAPI.GetWorldTextLineEntities(id)?.Select(entity => new { Id = id, Entity = entity }) ?? Enumerable.Empty<dynamic>())
+            var target = combinedList
+                .SelectMany(id => checkAPI.GetWorldTextLineEntities(id)?.Select(entity => new { Id = id, Entity = entity, IsPointsList = _currentPointsList.Contains(id) }) ?? Enumerable.Empty<dynamic>())
                 .Where(x => x.Entity.AbsOrigin != null && player.PlayerPawn.Value?.AbsOrigin != null && DistanceTo(x.Entity.AbsOrigin, player.PlayerPawn.Value!.AbsOrigin) < 100)
                 .OrderBy(x => x.Entity.AbsOrigin != null && player.PlayerPawn.Value?.AbsOrigin != null ? DistanceTo(x.Entity.AbsOrigin, player.PlayerPawn.Value!.AbsOrigin) : float.MaxValue)
                 .FirstOrDefault();
 
             if (target is null)
             {
-                command.ReplyToCommand($" {ChatColors.Silver}[ {ChatColors.Lime}{listType}List {ChatColors.Silver}] {ChatColors.Red}Move closer to the list that you want to remove.");
+                command.ReplyToCommand($" {ChatColors.Silver}[ {ChatColors.Lime}List {ChatColors.Silver}] {ChatColors.Red}Move closer to the list that you want to remove.");
                 return;
             }
 
             try
             {
                 checkAPI.RemoveWorldText(target.Id, false);
-                currentList.Remove(target.Id);
+                if (target.IsPointsList)
+                {
+                    _currentPointsList.Remove(target.Id);
+                }
+                else
+                {
+                    _currentMapList.Remove(target.Id);
+                }
 
                 var mapName = Server.MapName;
-                var path = Path.Combine(ModuleDirectory, $"{mapName}_{listType.ToString().ToLower()}list.json");
+                var path = target.IsPointsList
+                    ? Path.Combine(ModuleDirectory, $"{mapName}_pointslist.json")
+                    : Path.Combine(ModuleDirectory, $"{mapName}_maplist.json");
 
                 if (File.Exists(path))
                 {
@@ -331,8 +333,8 @@ namespace SharpTimerWallLists
                         {
                             Vector location = ParseVector(x.Location);
                             return location.X == entityVector.X &&
-                                   location.Y == entityVector.Y &&
-                                   x.Rotation == target.Entity.AbsRotation.ToString();
+                                location.Y == entityVector.Y &&
+                                x.Rotation == target.Entity.AbsRotation.ToString();
                         });
 
                         var options = new JsonSerializerOptions
@@ -344,13 +346,14 @@ namespace SharpTimerWallLists
                         File.WriteAllText(path, jsonString);
                     }
                 }
-                command.ReplyToCommand($" {ChatColors.Silver}[ {ChatColors.Lime}{listType}List {ChatColors.Silver}] {ChatColors.Green}List removed!");
+                command.ReplyToCommand($" {ChatColors.Silver}[ {ChatColors.Lime}List {ChatColors.Silver}] {ChatColors.Green}List removed!");
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "Error removing top list in RemoveTopList method.");
+                Logger.LogError(ex, "Error removing list in RemoveClosestList method.");
             }
         }
+
 
         private float DistanceTo(Vector a, Vector b)
         {
