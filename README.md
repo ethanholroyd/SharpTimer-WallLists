@@ -7,14 +7,13 @@
 <br />
 <div align="center">
   <h1 align="center">KitsuneLab©</h1>
-  <h3 align="center">SharpTimer Points List</h3>
-  <a align="center">A simple points list to display top x players on your map walls. Dynamically updates on given interval or if its disabled on round starts.</a><br>
-  <a align="center">The map records list is a separate plugin, which can be found in the other branch, or releases.</a><br>
+  <h3 align="center">SharpTimer Wall Lists</h3>
+  <a align="center">Provides two lists to display on the map, a player Points List, and a Map Records List. Dynamically updates on either map start or a given interval.</a><br>
   <img src="https://files.catbox.moe/pkarm0.png" alt="" style="margin: 0;">
 
   <p align="center">
     <br />
-    <a href="https://github.com/M-archand/SharpTimer-WallLists/releases/tag/1.0.4">Download</a>
+    <a href="https://github.com/M-archand/SharpTimer-WallLists/releases/tag/1.0.0">Download</a>
   </p>
 </div>
 
@@ -30,12 +29,20 @@ To use this server addon, you'll need the following dependencies installed:
   
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-<!-- ROADMAP -->
+<!-- COMMANDS -->
 
 ## Commands (root)
 
 - !pointslist - Create a points list in front of the player and save it to config file.
-- !pointsrem - Remove closest points list from your position. (100 units max) <br>**You may have to use the !pointsrem command twice to remove the list.
+- !maplist    - Create a map records list for the current map in front of the player and save it to config file.
+- !remlist  - Remove the closest list from your position. (100 units max) <br>**You may have to use the !remlist command twice to remove the list from the world view.
+
+<!-- CONFIG -->
+
+## Roadmap
+
+- A config file will be generated on first use located in _/addons/counterstrikesharp/configs/SharpTimer-WallLists_
+- The coordinates are saved in json files, located in _/addons/counterstrikesharp/configs/SharpTimer-WallLists/maps_
 
 <!-- ROADMAP -->
 
@@ -45,8 +52,9 @@ To use this server addon, you'll need the following dependencies installed:
 - [X] Add color configs. See [here](https://i.sstatic.net/lsuz4.png) for color names.
 - [X] Add font size & scale to config.
 - [X] Add SQLite & PostgreSQL support. // 1=MySQL, 2=SQLite, 3=PostgreSQL
-- [ ] Add database table prefix to config to support latest version of SharpTimer
-- [ ] Merge into a single plugin with SharpTimer-MapList plugin
+- [X] Merge MapList/PointsList plugins into a single plugin.
+- [ ] Add database table prefix to config to support latest version of SharpTimer.
+- [ ] Fix inconsistent results for !remlist
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
