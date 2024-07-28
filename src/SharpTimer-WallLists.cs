@@ -37,10 +37,10 @@ namespace SharpTimerWallLists
         public DatabaseSettings DatabaseSettings { get; set; } = new DatabaseSettings();
 
         [JsonPropertyName("PointsTitleText")]
-        public string PointsTitleText { get; set; } = "-- Server Points Leaders --";
+        public string PointsTitleText { get; set; } = "|--- Points Leaders ---|";
 
         [JsonPropertyName("MapsTitleText")]
-        public string MapsTitleText { get; set; } = "---- Map Records ----";
+        public string MapsTitleText { get; set; } = "|---- Map Records ----|";
 
         [JsonPropertyName("TitleFontSize")]
         public int TitleFontSize { get; set; } = 26;
@@ -57,7 +57,6 @@ namespace SharpTimerWallLists
         [JsonPropertyName("MaxNameLength")]
         public int MaxNameLength { get; set; } = 32; // Default value, 32 is max Steam name length
 
-        // List Colors
         [JsonPropertyName("TitleTextColor")]
         public string TitleTextColor { get; set; } = "Pink";
 
@@ -102,7 +101,7 @@ namespace SharpTimerWallLists
     public class PluginSharpTimerWallLists : BasePlugin, IPluginConfig<PluginConfig>
     {
         public override string ModuleName => "SharpTimer Wall Lists";
-        public override string ModuleAuthor => "K4ryuu (SharpTimer edit by Marchand)";
+        public override string ModuleAuthor => "K4ryuu + Marchand";
         public override string ModuleVersion => "1.0.0";
 
         public required PluginConfig Config { get; set; } = new PluginConfig();
@@ -113,7 +112,6 @@ namespace SharpTimerWallLists
         private List<int> _currentMapList = new();
         private CounterStrikeSharp.API.Modules.Timers.Timer? _updateTimer;
         private string _gameDirectory = Server.GameDirectory;
-        private string mapName = string.Empty;
         private string? _databasePath;
         private string? _connectionString;
 
@@ -129,8 +127,7 @@ namespace SharpTimerWallLists
         {
             InitializeDatabasePathAndConnectionString();
 
-            mapName = Server.MapName;
-            AddTimer(3, () => LoadWorldTextFromFile(mapName));
+            AddTimer(3, () => LoadWorldTextFromFile(Server.MapName));
 
             if (Config.TimeBasedUpdate)
             {
@@ -247,39 +244,47 @@ namespace SharpTimerWallLists
                 return;
             }
 
+            var mapName = Server.MapName;
+
             Task.Run(async () =>
             {
-                var topList = await GetTopPlayersAsync(Config.TopCount, listType);
-                var linesList = GetTopListTextLines(topList, listType);
-
-                Server.NextWorldUpdate(() =>
+                try
                 {
-                    int messageID = checkAPI.AddWorldTextAtPlayer(player, TextPlacement.Wall, linesList);
-                    if (listType == ListType.Points)
-                        _currentPointsList.Add(messageID);
-                    if (listType == ListType.Maps)
-                        _currentMapList.Add(messageID);
+                    var topList = await GetTopPlayersAsync(Config.TopCount, listType, mapName);
+                    var linesList = GetTopListTextLines(topList, listType);
 
-                    var lineList = checkAPI.GetWorldTextLineEntities(messageID);
-                    if (lineList?.Count > 0)
+                    Server.NextWorldUpdate(() =>
                     {
-                        var location = lineList[0]?.AbsOrigin;
-                        var rotation = lineList[0]?.AbsRotation;
+                        try
+                        {
+                            int messageID = checkAPI.AddWorldTextAtPlayer(player, TextPlacement.Wall, linesList);
+                            if (listType == ListType.Points)
+                                _currentPointsList.Add(messageID);
+                            if (listType == ListType.Maps)
+                                _currentMapList.Add(messageID);
 
-                        if (location != null && rotation != null)
-                        {
-                            SaveWorldTextToFile(location, rotation, listType);
+                            var lineList = checkAPI.GetWorldTextLineEntities(messageID);
+                            if (lineList?.Count > 0)
+                            {
+                                var location = lineList[0]?.AbsOrigin;
+                                var rotation = lineList[0]?.AbsRotation;
+
+                                if (location != null && rotation != null)
+                                {
+                                    SaveWorldTextToFile(location, rotation, listType);
+                                }
+                            }
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            Logger.LogError("Failed to get location or rotation for message ID: {0}", messageID);
+                            Logger.LogError(ex, "Error during NextWorldUpdate for CreateTopList.");
                         }
-                    }
-                    else
-                    {
-                        Logger.LogError("Failed to get world text line entities for message ID: {0}", messageID);
-                    }
-                });
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "Error creating top list in CreateTopList method.");
+                }
             });
         }
 
@@ -306,36 +311,43 @@ namespace SharpTimerWallLists
                 return;
             }
 
-            checkAPI.RemoveWorldText(target.Id, false);
-            currentList.Remove(target.Id);
-
-            var mapName = Server.MapName;
-            var path = Path.Combine(ModuleDirectory, $"{mapName}_{listType.ToString().ToLower()}list.json");
-
-            if (File.Exists(path))
+            try
             {
-                var data = JsonSerializer.Deserialize<List<WorldTextData>>(File.ReadAllText(path));
-                if (data != null)
+                checkAPI.RemoveWorldText(target.Id, false);
+                currentList.Remove(target.Id);
+
+                var mapName = Server.MapName;
+                var path = Path.Combine(ModuleDirectory, $"{mapName}_{listType.ToString().ToLower()}list.json");
+
+                if (File.Exists(path))
                 {
-                    Vector entityVector = target.Entity.AbsOrigin;
-                    data.RemoveAll(x =>
+                    var data = JsonSerializer.Deserialize<List<WorldTextData>>(File.ReadAllText(path));
+                    if (data != null)
                     {
-                        Vector location = ParseVector(x.Location);
-                        return location.X == entityVector.X &&
-                               location.Y == entityVector.Y &&
-                               x.Rotation == target.Entity.AbsRotation.ToString();
-                    });
+                        Vector entityVector = target.Entity.AbsOrigin;
+                        data.RemoveAll(x =>
+                        {
+                            Vector location = ParseVector(x.Location);
+                            return location.X == entityVector.X &&
+                                   location.Y == entityVector.Y &&
+                                   x.Rotation == target.Entity.AbsRotation.ToString();
+                        });
 
-                    var options = new JsonSerializerOptions
-                    {
-                        WriteIndented = true
-                    };
+                        var options = new JsonSerializerOptions
+                        {
+                            WriteIndented = true
+                        };
 
-                    string jsonString = JsonSerializer.Serialize(data, options);
-                    File.WriteAllText(path, jsonString);
+                        string jsonString = JsonSerializer.Serialize(data, options);
+                        File.WriteAllText(path, jsonString);
+                    }
                 }
+                command.ReplyToCommand($" {ChatColors.Silver}[ {ChatColors.Lime}{listType}List {ChatColors.Silver}] {ChatColors.Green}List removed!");
             }
-            command.ReplyToCommand($" {ChatColors.Silver}[ {ChatColors.Lime}{listType}List {ChatColors.Silver}] {ChatColors.Green}List removed!");
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error removing top list in RemoveTopList method.");
+            }
         }
 
         private float DistanceTo(Vector a, Vector b)
@@ -348,46 +360,43 @@ namespace SharpTimerWallLists
 
         private void SaveWorldTextToFile(Vector location, QAngle rotation, ListType listType)
         {
-            var mapName = Server.MapName;
-            var path = Path.Combine(ModuleDirectory, $"{mapName}_{listType.ToString().ToLower()}list.json");
-            var worldTextData = new WorldTextData
+            try
             {
-                Location = location.ToString(),
-                Rotation = rotation.ToString()
-            };
+                var mapName = Server.MapName;
+                var path = Path.Combine(ModuleDirectory, $"{mapName}_{listType.ToString().ToLower()}list.json");
+                var worldTextData = new WorldTextData
+                {
+                    Location = location.ToString(),
+                    Rotation = rotation.ToString()
+                };
 
-            List<WorldTextData> data;
-            if (File.Exists(path))
-            {
-                data = JsonSerializer.Deserialize<List<WorldTextData>>(File.ReadAllText(path)) ?? new List<WorldTextData>();
+                List<WorldTextData> data;
+                if (File.Exists(path))
+                {
+                    data = JsonSerializer.Deserialize<List<WorldTextData>>(File.ReadAllText(path)) ?? new List<WorldTextData>();
+                }
+                else
+                {
+                    data = new List<WorldTextData>();
+                }
+
+                data.Add(worldTextData);
+
+                var options = new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                };
+
+                string jsonString = JsonSerializer.Serialize(data, options);
+                File.WriteAllText(path, jsonString);
             }
-            else
+            catch (Exception ex)
             {
-                data = new List<WorldTextData>();
+                Logger.LogError(ex, "Error saving world text to file in SaveWorldTextToFile method.");
             }
-
-            data.Add(worldTextData);
-
-            var options = new JsonSerializerOptions
-            {
-                WriteIndented = true
-            };
-
-            string jsonString = JsonSerializer.Serialize(data, options);
-            File.WriteAllText(path, jsonString);
         }
 
-        private void LoadWorldTextFromFile(string? passedMapName = null)
-        {
-            var mapName = passedMapName ?? Server.MapName;
-            var pointsPath = Path.Combine(ModuleDirectory, $"{mapName}_pointslist.json");
-            var mapsPath = Path.Combine(ModuleDirectory, $"{mapName}_maplist.json");
-
-            LoadWorldTextFromFile(pointsPath, ListType.Points);
-            LoadWorldTextFromFile(mapsPath, ListType.Maps);
-        }
-
-        private void LoadWorldTextFromFile(string path, ListType listType)
+        private void LoadWorldTextFromFile(string path, ListType listType, string mapName)
         {
             if (File.Exists(path))
             {
@@ -396,28 +405,52 @@ namespace SharpTimerWallLists
 
                 Task.Run(async () =>
                 {
-                    var topList = await GetTopPlayersAsync(Config.TopCount, listType);
-                    var linesList = GetTopListTextLines(topList, listType);
-
-                    Server.NextWorldUpdate(() =>
+                    try
                     {
-                        var checkAPI = Capability_SharedAPI.Get();
-                        if (checkAPI is null) return;
+                        var topList = await GetTopPlayersAsync(Config.TopCount, listType, mapName);
+                        var linesList = GetTopListTextLines(topList, listType);
 
-                        foreach (var worldTextData in data)
+                        Server.NextWorldUpdate(() =>
                         {
-                            if (!string.IsNullOrEmpty(worldTextData.Location) && !string.IsNullOrEmpty(worldTextData.Rotation))
+                            try
                             {
-                                var messageID = checkAPI.AddWorldText(TextPlacement.Wall, linesList, ParseVector(worldTextData.Location), ParseQAngle(worldTextData.Rotation));
-                                if (listType == ListType.Points)
-                                    _currentPointsList.Add(messageID);
-                                if (listType == ListType.Maps)
-                                    _currentMapList.Add(messageID);
+                                var checkAPI = Capability_SharedAPI.Get();
+                                if (checkAPI is null) return;
+
+                                foreach (var worldTextData in data)
+                                {
+                                    if (!string.IsNullOrEmpty(worldTextData.Location) && !string.IsNullOrEmpty(worldTextData.Rotation))
+                                    {
+                                        var messageID = checkAPI.AddWorldText(TextPlacement.Wall, linesList, ParseVector(worldTextData.Location), ParseQAngle(worldTextData.Rotation));
+                                        if (listType == ListType.Points)
+                                            _currentPointsList.Add(messageID);
+                                        else if (listType == ListType.Maps)
+                                            _currentMapList.Add(messageID);
+                                    }
+                                }
                             }
-                        }
-                    });
+                            catch (Exception ex)
+                            {
+                                Logger.LogError(ex, "Error during NextWorldUpdate in LoadWorldTextFromFile.");
+                            }
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.LogError(ex, "Error loading world text from file in LoadWorldTextFromFile method.");
+                    }
                 });
             }
+        }
+
+        private void LoadWorldTextFromFile(string? passedMapName = null)
+        {
+            var mapName = passedMapName ?? Server.MapName;
+            var pointsPath = Path.Combine(ModuleDirectory, $"{mapName}_pointslist.json");
+            var mapsPath = Path.Combine(ModuleDirectory, $"{mapName}_maplist.json");
+
+            LoadWorldTextFromFile(pointsPath, ListType.Points, mapName);
+            LoadWorldTextFromFile(mapsPath, ListType.Maps, mapName);
         }
 
         public static Vector ParseVector(string vectorString)
@@ -448,23 +481,39 @@ namespace SharpTimerWallLists
 
         private void RefreshLists()
         {
+            var mapName = Server.MapName;
+            
             Task.Run(async () =>
             {
-                var pointsTopList = await GetTopPlayersAsync(Config.TopCount, ListType.Points);
-                var mapsTopList = await GetTopPlayersAsync(Config.TopCount, ListType.Maps);
-
-                var pointsLinesList = GetTopListTextLines(pointsTopList, ListType.Points);
-                var mapsLinesList = GetTopListTextLines(mapsTopList, ListType.Maps);
-
-                Server.NextWorldUpdate(() =>
+                try
                 {
-                    var checkAPI = Capability_SharedAPI.Get();
-                    if (checkAPI != null)
+                    var pointsTopList = await GetTopPlayersAsync(Config.TopCount, ListType.Points, mapName);
+                    var mapsTopList = await GetTopPlayersAsync(Config.TopCount, ListType.Maps, mapName);
+
+                    var pointsLinesList = GetTopListTextLines(pointsTopList, ListType.Points);
+                    var mapsLinesList = GetTopListTextLines(mapsTopList, ListType.Maps);
+
+                    Server.NextWorldUpdate(() =>
                     {
-                        _currentPointsList.ForEach(id => checkAPI.UpdateWorldText(id, pointsLinesList));
-                        _currentMapList.ForEach(id => checkAPI.UpdateWorldText(id, mapsLinesList));
-                    }
-                });
+                        try
+                        {
+                            var checkAPI = Capability_SharedAPI.Get();
+                            if (checkAPI != null)
+                            {
+                                _currentPointsList.ForEach(id => checkAPI.UpdateWorldText(id, pointsLinesList));
+                                _currentMapList.ForEach(id => checkAPI.UpdateWorldText(id, mapsLinesList));
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.LogError(ex, "Error during NextWorldUpdate in RefreshLists.");
+                        }
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "Error refreshing lists in RefreshLists method.");
+                }
             });
         }
 
@@ -502,49 +551,83 @@ namespace SharpTimerWallLists
             }
 
             int maxNameLength = Config.MaxNameLength;
-            var titleText = listType == ListType.Points ? Config.PointsTitleText : Config.MapsTitleText;
-            var linesList = new List<TextLine>
+            var linesList = new List<TextLine>();
+
+            if (listType == ListType.Points)
             {
-                new TextLine
+                linesList.Add(new TextLine
                 {
-                    Text = titleText,
+                    Text = Config.PointsTitleText,
                     Color = ParseColor(Config.TitleTextColor),
                     FontSize = Config.TitleFontSize,
                     FullBright = true,
                     Scale = Config.TitleTextScale
-                }
-            };
+                });
 
-            for (int i = 0; i < topList.Count; i++)
-            {
-                var topplayer = topList[i];
-                var truncatedName = TruncateString(topplayer.PlayerName, maxNameLength);
-                var color = i switch
+                for (int i = 0; i < topList.Count; i++)
                 {
-                    0 => ParseColor(Config.FirstPlaceColor),
-                    1 => ParseColor(Config.SecondPlaceColor),
-                    2 => ParseColor(Config.ThirdPlaceColor),
-                    _ => ParseColor(Config.DefaultColor)
-                };
+                    var topplayer = topList[i];
+                    var truncatedName = TruncateString(topplayer.PlayerName, maxNameLength);
+                    var color = i switch
+                    {
+                        0 => ParseColor(Config.FirstPlaceColor),
+                        1 => ParseColor(Config.SecondPlaceColor),
+                        2 => ParseColor(Config.ThirdPlaceColor),
+                        _ => ParseColor(Config.DefaultColor)
+                    };
 
-                var lineText = listType == ListType.Points
-                    ? $"{i + 1}. {truncatedName} - {topplayer.GlobalPoints} points"
-                    : $"{i + 1}. {topplayer.FormattedTime} - {truncatedName}";
+                    var lineText = $"{i + 1}. {truncatedName} - {topplayer.GlobalPoints} points";
 
+                    linesList.Add(new TextLine
+                    {
+                        Text = lineText,
+                        Color = color,
+                        FontSize = Config.ListFontSize,
+                        FullBright = true,
+                        Scale = Config.ListTextScale
+                    });
+                }
+            }
+            else if (listType == ListType.Maps)
+            {
                 linesList.Add(new TextLine
                 {
-                    Text = lineText,
-                    Color = color,
-                    FontSize = Config.ListFontSize,
+                    Text = Config.MapsTitleText,
+                    Color = ParseColor(Config.TitleTextColor),
+                    FontSize = Config.TitleFontSize,
                     FullBright = true,
-                    Scale = Config.ListTextScale
+                    Scale = Config.TitleTextScale
                 });
+
+                for (int i = 0; i < topList.Count; i++)
+                {
+                    var topplayer = topList[i];
+                    var truncatedName = TruncateString(topplayer.PlayerName, maxNameLength);
+                    var color = i switch
+                    {
+                        0 => ParseColor(Config.FirstPlaceColor),
+                        1 => ParseColor(Config.SecondPlaceColor),
+                        2 => ParseColor(Config.ThirdPlaceColor),
+                        _ => ParseColor(Config.DefaultColor)
+                    };
+
+                    var lineText = $"{i + 1}. {topplayer.FormattedTime} - {truncatedName}";
+
+                    linesList.Add(new TextLine
+                    {
+                        Text = lineText,
+                        Color = color,
+                        FontSize = Config.ListFontSize,
+                        FullBright = true,
+                        Scale = Config.ListTextScale
+                    });
+                }
             }
 
             return linesList;
         }
 
-        public async Task<List<PlayerPlace>> GetTopPlayersAsync(int topCount, ListType listType)
+        public async Task<List<PlayerPlace>> GetTopPlayersAsync(int topCount, ListType listType, string mapName)
         {
             string query;
             if (Config.DatabaseType == 1)
