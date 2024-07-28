@@ -321,7 +321,7 @@ namespace SharpTimerWallLists
                 var mapName = Server.MapName;
                 var path = target.IsPointsList
                     ? Path.Combine(ModuleDirectory, $"{mapName}_pointslist.json")
-                    : Path.Combine(ModuleDirectory, $"{mapName}_maplist.json");
+                    : Path.Combine(ModuleDirectory, $"{mapName}_mapslist.json");
 
                 if (File.Exists(path))
                 {
@@ -369,6 +369,7 @@ namespace SharpTimerWallLists
             {
                 var mapName = Server.MapName;
                 var path = Path.Combine(ModuleDirectory, $"{mapName}_{listType.ToString().ToLower()}list.json");
+
                 var worldTextData = new WorldTextData
                 {
                     Location = location.ToString(),
@@ -452,7 +453,7 @@ namespace SharpTimerWallLists
         {
             var mapName = passedMapName ?? Server.MapName;
             var pointsPath = Path.Combine(ModuleDirectory, $"{mapName}_pointslist.json");
-            var mapsPath = Path.Combine(ModuleDirectory, $"{mapName}_maplist.json");
+            var mapsPath = Path.Combine(ModuleDirectory, $"{mapName}_mapslist.json");
 
             LoadWorldTextFromFile(pointsPath, ListType.Points, mapName);
             LoadWorldTextFromFile(mapsPath, ListType.Maps, mapName);
