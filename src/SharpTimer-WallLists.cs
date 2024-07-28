@@ -228,6 +228,11 @@ namespace SharpTimerWallLists
         public void OnRemoveList(CCSPlayerController player, CommandInfo command)
         {
             RemoveClosestList(player, command);
+            Task.Run(async () =>
+            {
+                await Task.Delay(750);
+                Server.NextWorldUpdate(() => RemoveClosestList(player, command));
+            });
         }
 
         private void CreateTopList(CCSPlayerController player, CommandInfo command, ListType listType)
