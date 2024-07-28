@@ -34,14 +34,14 @@ To use this server addon, you'll need the following dependencies installed:
 
 - !pointslist - Create a points list in front of the player and save it to config file.
 - !maplist    - Create a map records list for the current map in front of the player and save it to config file.
-- !remlist  - Remove the closest list from your position. (100 units max) <br>**You may have to use the !remlist command twice to remove the list from the world view.
+- !remlist  - Remove the closest list from your position. (100 units max)
 
 <!-- CONFIG -->
 
 ## Roadmap
 
 - A config file will be generated on first use located in _/addons/counterstrikesharp/configs/SharpTimer-WallLists_
-- The coordinates are saved in json files, located in _/addons/counterstrikesharp/configs/SharpTimer-WallLists/maps_
+- The coordinates are saved in json files, located in _/addons/counterstrikesharp/plugins/SharpTimer-WallLists/maps_
 
 <!-- ROADMAP -->
 
