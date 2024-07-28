@@ -95,6 +95,8 @@ namespace SharpTimerWallLists
 
         [JsonPropertyName("sslmode")]
         public string Sslmode { get; set; } = "none";
+        [JsonPropertyName("table-prefix")]
+	    public string TablePrefix { get; set; } = "";
     }
 
     [MinimumApiVersion(205)]
@@ -629,6 +631,7 @@ namespace SharpTimerWallLists
 
         public async Task<List<PlayerPlace>> GetTopPlayersAsync(int topCount, ListType listType, string mapName)
         {
+            string tablePrefix = Config.DatabaseSettings.TablePrefix;
             string query;
             if (Config.DatabaseType == 1)
             {
@@ -641,7 +644,7 @@ namespace SharpTimerWallLists
                             PlayerName,
                             GlobalPoints,
                             DENSE_RANK() OVER (ORDER BY GlobalPoints DESC) AS playerPlace
-                        FROM PlayerStats
+                        FROM {tablePrefix}PlayerStats
                     )
                     SELECT SteamID, PlayerName, GlobalPoints, playerPlace
                     FROM RankedPlayers
@@ -654,7 +657,7 @@ namespace SharpTimerWallLists
                             PlayerName,
                             FormattedTime,
                             DENSE_RANK() OVER (ORDER BY STR_TO_DATE(FormattedTime, '%i:%s.%f') ASC) AS playerPlace
-                        FROM PlayerRecords
+                        FROM {tablePrefix}PlayerRecords
                         WHERE MapName = @MapName
                     )
                     SELECT SteamID, PlayerName, FormattedTime, playerPlace
@@ -675,7 +678,7 @@ namespace SharpTimerWallLists
                             PlayerName,
                             GlobalPoints,
                             DENSE_RANK() OVER (ORDER BY GlobalPoints DESC) AS playerPlace
-                        FROM PlayerStats
+                        FROM {tablePrefix}PlayerStats
                     )
                     SELECT SteamID, PlayerName, GlobalPoints, playerPlace
                     FROM RankedPlayers
@@ -688,7 +691,7 @@ namespace SharpTimerWallLists
                             PlayerName,
                             FormattedTime,
                             DENSE_RANK() OVER (ORDER BY strftime('%M:%S.%f', FormattedTime) ASC) AS playerPlace
-                        FROM PlayerRecords
+                        FROM {tablePrefix}PlayerRecords
                         WHERE MapName = @MapName
                     )
                     SELECT SteamID, PlayerName, FormattedTime, playerPlace
@@ -709,7 +712,7 @@ namespace SharpTimerWallLists
                             ""PlayerName"",
                             ""GlobalPoints"",
                             DENSE_RANK() OVER (ORDER BY ""GlobalPoints"" DESC) AS playerPlace
-                        FROM ""PlayerStats""
+                        FROM ""{tablePrefix}PlayerStats""
                     )
                     SELECT ""SteamID"", ""PlayerName"", ""GlobalPoints"", playerPlace
                     FROM RankedPlayers
@@ -722,7 +725,7 @@ namespace SharpTimerWallLists
                             ""PlayerName"",
                             ""FormattedTime"",
                             DENSE_RANK() OVER (ORDER BY to_timestamp(""FormattedTime"", 'MI:SS.US') ASC) AS playerPlace
-                        FROM ""PlayerRecords""
+                        FROM ""{tablePrefix}PlayerRecords""
                         WHERE ""MapName"" = @MapName
                     )
                     SELECT ""SteamID"", ""PlayerName"", ""FormattedTime"", playerPlace
