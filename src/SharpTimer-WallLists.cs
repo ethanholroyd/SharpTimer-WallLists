@@ -230,7 +230,7 @@ namespace SharpTimerWallLists
             RemoveClosestList(player, command);
             Task.Run(async () =>
             {
-                await Task.Delay(750);
+                await Task.Delay(1000);
                 Server.NextWorldUpdate(() => RemoveClosestList(player, command));
             });
         }
@@ -328,7 +328,7 @@ namespace SharpTimerWallLists
 
                 var path = target.IsPointsList
                     ? Path.Combine(mapsDirectory, $"{mapName}_pointslist.json")
-                    : Path.Combine(mapsDirectory, $"{mapName}_mapslist.json");
+                    : Path.Combine(mapsDirectory, $"{mapName}_timeslist.json");
 
                 if (File.Exists(path))
                 {
@@ -381,7 +381,8 @@ namespace SharpTimerWallLists
                     Directory.CreateDirectory(mapsDirectory);
                 }
 
-                var path = Path.Combine(mapsDirectory, $"{mapName}_{listType.ToString().ToLower()}list.json");
+                var filename = listType == ListType.Maps ? $"{mapName}_timeslist.json" : $"{mapName}_{listType.ToString().ToLower()}list.json";
+                var path = Path.Combine(mapsDirectory, filename);
 
                 var worldTextData = new WorldTextData
                 {
@@ -468,7 +469,7 @@ namespace SharpTimerWallLists
             var mapsDirectory = Path.Combine(ModuleDirectory, "maps");
 
             var pointsPath = Path.Combine(mapsDirectory, $"{mapName}_pointslist.json");
-            var mapsPath = Path.Combine(mapsDirectory, $"{mapName}_mapslist.json");
+            var mapsPath = Path.Combine(mapsDirectory, $"{mapName}_timeslist.json");
 
             LoadWorldTextFromFile(pointsPath, ListType.Points, mapName);
             LoadWorldTextFromFile(mapsPath, ListType.Maps, mapName);
