@@ -324,9 +324,11 @@ namespace SharpTimerWallLists
                 }
 
                 var mapName = Server.MapName;
+                var mapsDirectory = Path.Combine(ModuleDirectory, "maps");
+
                 var path = target.IsPointsList
-                    ? Path.Combine(ModuleDirectory, $"{mapName}_pointslist.json")
-                    : Path.Combine(ModuleDirectory, $"{mapName}_mapslist.json");
+                    ? Path.Combine(mapsDirectory, $"{mapName}_pointslist.json")
+                    : Path.Combine(mapsDirectory, $"{mapName}_mapslist.json");
 
                 if (File.Exists(path))
                 {
@@ -373,7 +375,13 @@ namespace SharpTimerWallLists
             try
             {
                 var mapName = Server.MapName;
-                var path = Path.Combine(ModuleDirectory, $"{mapName}_{listType.ToString().ToLower()}list.json");
+                var mapsDirectory = Path.Combine(ModuleDirectory, "maps");
+                if (!Directory.Exists(mapsDirectory))
+                {
+                    Directory.CreateDirectory(mapsDirectory);
+                }
+
+                var path = Path.Combine(mapsDirectory, $"{mapName}_{listType.ToString().ToLower()}list.json");
 
                 var worldTextData = new WorldTextData
                 {
@@ -457,8 +465,10 @@ namespace SharpTimerWallLists
         private void LoadWorldTextFromFile(string? passedMapName = null)
         {
             var mapName = passedMapName ?? Server.MapName;
-            var pointsPath = Path.Combine(ModuleDirectory, $"{mapName}_pointslist.json");
-            var mapsPath = Path.Combine(ModuleDirectory, $"{mapName}_mapslist.json");
+            var mapsDirectory = Path.Combine(ModuleDirectory, "maps");
+
+            var pointsPath = Path.Combine(mapsDirectory, $"{mapName}_pointslist.json");
+            var mapsPath = Path.Combine(mapsDirectory, $"{mapName}_mapslist.json");
 
             LoadWorldTextFromFile(pointsPath, ListType.Points, mapName);
             LoadWorldTextFromFile(mapsPath, ListType.Maps, mapName);
