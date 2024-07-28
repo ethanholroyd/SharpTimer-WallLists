@@ -6,8 +6,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <h1 align="center">KitsuneLab©</h1>
-  <h3 align="center">SharpTimer Wall Lists</h3>
+  <h1 align="center">SharpTimer Wall Lists</h1>
   <a align="center">Provides two lists to display on the map, a player Points List, and a Map Records List. Dynamically updates on either map start or a given interval.</a><br>
   <img src="https://files.catbox.moe/pkarm0.png" alt="" style="margin: 0;">
 
