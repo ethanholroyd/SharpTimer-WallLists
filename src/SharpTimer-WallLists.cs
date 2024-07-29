@@ -72,8 +72,20 @@ namespace SharpTimerWallLists
         [JsonPropertyName("DefaultColor")]
         public string DefaultColor { get; set; } = "White";
 
+        [JsonPropertyName("PointsListCommand")]
+        public string PointsListCommand { get; set; } = "pointslist";
+
+        [JsonPropertyName("TimesListCommand")]
+        public string TimesListCommand { get; set; } = "timeslist";
+
+        [JsonPropertyName("RemoveListCommand")]
+        public string RemoveListCommand { get; set; } = "removelist";
+        
+        [JsonPropertyName("CommandPermission")]
+        public string CommandPermission { get; set; } = "@css/root";
+
         [JsonPropertyName("ConfigVersion")]
-        public override int Version { get; set; } = 6;
+        public override int Version { get; set; } = 1;
     }
 
     public sealed class DatabaseSettings
@@ -130,6 +142,10 @@ namespace SharpTimerWallLists
             InitializeDatabasePathAndConnectionString();
 
             AddTimer(3, () => LoadWorldTextFromFile(Server.MapName));
+
+            AddCommand($"css_{Config.PointsListCommand}", "Sets up the points list", OnPointsListAdd);
+            AddCommand($"css_{Config.TimesListCommand}", "Sets up the map records list", OnMapListAdd);
+            AddCommand($"css_{Config.RemoveListCommand}", "Removes the closest list, whether points or map", OnRemoveList);
 
             if (Config.TimeBasedUpdate)
             {
@@ -209,24 +225,27 @@ namespace SharpTimerWallLists
             }
         }
 
-        [ConsoleCommand("css_pointslist", "Sets up the points list")]
-        [RequiresPermissions("@css/root")]
-        public void OnPointsListAdd(CCSPlayerController player, CommandInfo command)
+        [ConsoleCommand($"css_{DefaultCommandNames.PointsListCommand}", "Sets up the points list")]
+        [RequiresPermissions($"{DefaultCommandNames.CommandPermission}")]
+        public void OnPointsListAdd(CCSPlayerController? player, CommandInfo? command)
         {
+            if (player == null || command == null) return;
             CreateTopList(player, command, ListType.Points);
         }
 
-        [ConsoleCommand("css_maplist", "Sets up the map top list")]
-        [RequiresPermissions("@css/root")]
-        public void OnMapListAdd(CCSPlayerController player, CommandInfo command)
+        [ConsoleCommand($"css_{DefaultCommandNames.TimesListCommand}", "Sets up the map top list")]
+        [RequiresPermissions($"{DefaultCommandNames.CommandPermission}")]
+        public void OnMapListAdd(CCSPlayerController? player, CommandInfo? command)
         {
+            if (player == null || command == null) return;
             CreateTopList(player, command, ListType.Maps);
         }
 
-        [ConsoleCommand("css_remlist", "Removes the closest list, whether points or map")]
-        [RequiresPermissions("@css/root")]
-        public void OnRemoveList(CCSPlayerController player, CommandInfo command)
+        [ConsoleCommand($"css_{DefaultCommandNames.RemoveListCommand}", "Removes the closest list, whether points or map")]
+        [RequiresPermissions($"{DefaultCommandNames.CommandPermission}")]
+        public void OnRemoveList(CCSPlayerController? player, CommandInfo? command)
         {
+            if (player == null || command == null) return;
             RemoveClosestList(player, command);
             Task.Run(async () =>
             {
@@ -235,12 +254,13 @@ namespace SharpTimerWallLists
             });
         }
 
+
         private void CreateTopList(CCSPlayerController player, CommandInfo command, ListType listType)
         {
             var checkAPI = Capability_SharedAPI.Get();
             if (checkAPI is null)
             {
-                command.ReplyToCommand($" {ChatColors.Silver}[ {ChatColors.Lime}{listType}List {ChatColors.Silver}] {ChatColors.LightRed}Failed to get the shared API.");
+                command.ReplyToCommand($" {ChatColors.Gold}[{ChatColors.Lime}{listType}WallLists{ChatColors.Gold}] {ChatColors.LightRed}Failed to get the shared API.");
                 return;
             }
 
@@ -283,7 +303,7 @@ namespace SharpTimerWallLists
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogError(ex, "Error creating top list in CreateTopList method.");
+                    Logger.LogError(ex, "Error creating wall list in CreateTopList method.");
                 }
             });
         }
@@ -293,7 +313,7 @@ namespace SharpTimerWallLists
             var checkAPI = Capability_SharedAPI.Get();
             if (checkAPI is null)
             {
-                command.ReplyToCommand($" {ChatColors.Silver}[ {ChatColors.Lime}List {ChatColors.Silver}] {ChatColors.LightRed}Failed to get the shared API.");
+                command.ReplyToCommand($" {ChatColors.Gold}[{ChatColors.Lime}WallLists{ChatColors.Gold}] {ChatColors.LightRed}Failed to get the shared API.");
                 return;
             }
 
@@ -307,7 +327,7 @@ namespace SharpTimerWallLists
 
             if (target is null)
             {
-                command.ReplyToCommand($" {ChatColors.Silver}[ {ChatColors.Lime}List {ChatColors.Silver}] {ChatColors.Red}Move closer to the list that you want to remove.");
+                command.ReplyToCommand($" {ChatColors.Gold}[{ChatColors.Lime}WallLists{ChatColors.Gold}] {ChatColors.Red}Move closer to the list that you want to remove.");
                 return;
             }
 
@@ -353,7 +373,7 @@ namespace SharpTimerWallLists
                         File.WriteAllText(path, jsonString);
                     }
                 }
-                command.ReplyToCommand($" {ChatColors.Silver}[ {ChatColors.Lime}List {ChatColors.Silver}] {ChatColors.Green}List removed!");
+                command.ReplyToCommand($" {ChatColors.Gold}[{ChatColors.Lime}WallLists{ChatColors.Gold}] {ChatColors.Green}List removed!");
             }
             catch (Exception ex)
             {
@@ -848,6 +868,14 @@ namespace SharpTimerWallLists
         public int GlobalPoints { get; set; }
         public string? FormattedTime { get; set; }
         public int Placement { get; set; }
+    }
+
+    public static class DefaultCommandNames
+    {
+        public const string PointsListCommand = "pointslist";
+        public const string TimesListCommand = "timeslist";
+        public const string RemoveListCommand = "removelist";
+        public const string CommandPermission = "@css/root";
     }
 
     public class WorldTextData
