@@ -1,8 +1,8 @@
 {
-  "TopCount": 5,
-  "TimeBasedUpdate": false,
-  "UpdateInterval": 60,
-  "DatabaseType": 1,
+  "TopCount": 5, // Number of spots on the list
+  "TimeBasedUpdate": false, // true = Updates on UpdateInterval, false = Updates on map change
+  "UpdateInterval": 60, // The number in second between updates
+  "DatabaseType": 1, // 1 = MySQL, 2 = SQLite, 3 = PostgrSQL
   "DatabaseSettings": {
     "host": "localhost",
     "username": "root",
@@ -10,23 +10,23 @@
     "password": "password",
     "port": 3306,
     "sslmode": "none",
-    "table-prefix": ""
+    "table-prefix": "" // Empty means you have no prefix (PlayerRecords, PlayerStats). "XX_" means your tables have a prefix (XX_PlayerRecords, XX_PlayerStats)
   },
-  "PointsTitleText": "|--- Points Leaders ---|",
-  "MapsTitleText": "|---- Map Records ----|",
+  "PointsTitleText": "|--- Points Leaders ---|", // The title for the list
+  "MapsTitleText": "|---- Map Records ----|", // The title for the list
   "TitleFontSize": 26,
   "TitleTextScale": 0.45,
   "ListFontSize": 24,
   "ListTextScale": 0.35,
   "MaxNameLength": 32,
-  "TitleTextColor": "Magenta",
+  "TitleTextColor": "Magenta", 
   "FirstPlaceColor": "Lime",
   "SecondPlaceColor": "Coral",
   "ThirdPlaceColor": "Cyan",
-  "DefaultColor": "White",
-  "PointsListCommand": "pointslist",
-  "TimesListCommand": "timeslist",
-  "RemoveListCommand": "removelist",
-  "CommandPermission": "@css/root",
+  "DefaultColor": "White", // The color for any line besides 1. 2. 3.
+  "PointsListCommand": "pointslist", // The command to add a points list, in game use !pointslist
+  "TimesListCommand": "timeslist", // The command to add a points list, in game use !pointslist
+  "RemoveListCommand": "removelist", // The command to add a points list, in game use !pointslist
+  "CommandPermission": "@css/root", // The permission required to use these commands
   "ConfigVersion": 1
 }
