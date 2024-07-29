@@ -30,11 +30,12 @@ To use this server addon, you'll need the following dependencies installed:
 
 <!-- COMMANDS -->
 
-## Commands (root)
+## Commands (default:@css/root, can be configured)
 
+All commands can be configured, these are the default commands:
 - !pointslist - Create a points list in front of the player and save it to config file.
-- !maplist    - Create a map records list for the current map in front of the player and save it to config file.
-- !remlist  - Remove the closest list from your position. (100 units max)
+- !timeslist  - Create a map records list for the current map in front of the player and save it to config file.
+- !removelist - Remove the closest list from your position. (100 units max)
 
 <!-- CONFIG -->
 
@@ -52,8 +53,10 @@ To use this server addon, you'll need the following dependencies installed:
 - [X] Add font size & scale to config.
 - [X] Add SQLite & PostgreSQL support. // 1=MySQL, 2=SQLite, 3=PostgreSQL
 - [X] Merge MapList/PointsList plugins into a single plugin.
-- [ ] Add database table prefix to config to support latest version of SharpTimer.
-- [ ] Fix inconsistent results for !remlist
+- [X] Add database table prefix to config to support latest version of SharpTimer.
+- [X] Fix inconsistent results for !removelist
+- [X] Add configurabled commands
+- [X] Add configurable permissions
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
