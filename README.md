@@ -7,8 +7,9 @@
 <br />
 <div align="center">
   <h1 align="center">SharpTimer Wall Lists</h1>
-  <a align="center">Provides two lists to display on the map, a player Points List, and a Map Records List. Dynamically updates on either map start or a given interval.</a><br>
-  <img src="https://files.catbox.moe/pkarm0.png" alt="" style="margin: 0;">
+  <a align="center">Provides two lists to display on the map, a player Points List, and a Map Records List.<br>Dynamically updates on either map start or a given interval.</a><br>
+  <br>
+  <img src="https://files.catbox.moe/6s29ib.png" alt="" style="margin: 0;">
 
   <p align="center">
     <br />
@@ -30,8 +31,9 @@ To use this server addon, you'll need the following dependencies installed:
 
 <!-- COMMANDS -->
 
-## Commands (default:@css/root, can be configured)
+## Commands
 
+Default Access: @css/root, can be configured.
 All commands can be configured, these are the default commands:
 - !pointslist - Create a points list in front of the player and save it to config file.
 - !timeslist  - Create a map records list for the current map in front of the player and save it to config file.
@@ -39,11 +41,11 @@ All commands can be configured, these are the default commands:
 
 <!-- CONFIG -->
 
-## Roadmap
+## Configuration
 
 - A config file will be generated on first use located in _/addons/counterstrikesharp/configs/SharpTimer-WallLists_
 - The coordinates are saved in json files, located in _/addons/counterstrikesharp/plugins/SharpTimer-WallLists/maps_
-
+- You can see an exmaple with detailed comments here: [SharpTimer-WallList.example.json](https://github.com/M-archand/SharpTimer-WallLists/blob/WallLists/SharpTimer-WallLists.example.json)
 <!-- ROADMAP -->
 
 ## Roadmap
