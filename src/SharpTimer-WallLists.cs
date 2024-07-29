@@ -58,13 +58,13 @@ namespace SharpTimerWallLists
         public int MaxNameLength { get; set; } = 32; // Default value, 32 is max Steam name length
 
         [JsonPropertyName("TitleTextColor")]
-        public string TitleTextColor { get; set; } = "Pink";
+        public string TitleTextColor { get; set; } = "Magenta";
 
         [JsonPropertyName("FirstPlaceColor")]
         public string FirstPlaceColor { get; set; } = "Lime";
 
         [JsonPropertyName("SecondPlaceColor")]
-        public string SecondPlaceColor { get; set; } = "Magenta";
+        public string SecondPlaceColor { get; set; } = "Coral";
 
         [JsonPropertyName("ThirdPlaceColor")]
         public string ThirdPlaceColor { get; set; } = "Cyan";
@@ -260,7 +260,7 @@ namespace SharpTimerWallLists
             var checkAPI = Capability_SharedAPI.Get();
             if (checkAPI is null)
             {
-                command.ReplyToCommand($" {ChatColors.Gold}[{ChatColors.Lime}{listType}WallLists{ChatColors.Gold}] {ChatColors.LightRed}Failed to get the shared API.");
+                command.ReplyToCommand($" {ChatColors.Purple}[{ChatColors.Red}{listType}WallLists{ChatColors.Purple}] {ChatColors.LightRed}Failed to get the shared API.");
                 return;
             }
 
@@ -313,7 +313,7 @@ namespace SharpTimerWallLists
             var checkAPI = Capability_SharedAPI.Get();
             if (checkAPI is null)
             {
-                command.ReplyToCommand($" {ChatColors.Gold}[{ChatColors.Lime}WallLists{ChatColors.Gold}] {ChatColors.LightRed}Failed to get the shared API.");
+                command.ReplyToCommand($" {ChatColors.Purple}[{ChatColors.LightPurple}WallLists{ChatColors.Purple}] {ChatColors.LightRed}Failed to get the shared API.");
                 return;
             }
 
@@ -327,7 +327,7 @@ namespace SharpTimerWallLists
 
             if (target is null)
             {
-                command.ReplyToCommand($" {ChatColors.Gold}[{ChatColors.Lime}WallLists{ChatColors.Gold}] {ChatColors.Red}Move closer to the list that you want to remove.");
+                command.ReplyToCommand($" {ChatColors.Purple}[{ChatColors.LightPurple}WallLists{ChatColors.Purple}] {ChatColors.Red}Move closer to the list that you want to remove.");
                 return;
             }
 
@@ -373,7 +373,7 @@ namespace SharpTimerWallLists
                         File.WriteAllText(path, jsonString);
                     }
                 }
-                command.ReplyToCommand($" {ChatColors.Gold}[{ChatColors.Lime}WallLists{ChatColors.Gold}] {ChatColors.Green}List removed!");
+                command.ReplyToCommand($" {ChatColors.Purple}[{ChatColors.LightPurple}WallLists{ChatColors.Purple}] {ChatColors.Green}List removed!");
             }
             catch (Exception ex)
             {
