@@ -1,0 +1,32 @@
+{
+  "TopCount": 5,
+  "TimeBasedUpdate": false,
+  "UpdateInterval": 60,
+  "DatabaseType": 1,
+  "DatabaseSettings": {
+    "host": "localhost",
+    "username": "root",
+    "database": "database",
+    "password": "password",
+    "port": 3306,
+    "sslmode": "none",
+    "table-prefix": ""
+  },
+  "PointsTitleText": "|--- Points Leaders ---|",
+  "MapsTitleText": "|---- Map Records ----|",
+  "TitleFontSize": 26,
+  "TitleTextScale": 0.45,
+  "ListFontSize": 24,
+  "ListTextScale": 0.35,
+  "MaxNameLength": 32,
+  "TitleTextColor": "Magenta",
+  "FirstPlaceColor": "Lime",
+  "SecondPlaceColor": "Coral",
+  "ThirdPlaceColor": "Cyan",
+  "DefaultColor": "White",
+  "PointsListCommand": "pointslist",
+  "TimesListCommand": "timeslist",
+  "RemoveListCommand": "removelist",
+  "CommandPermission": "@css/root",
+  "ConfigVersion": 1
+}
