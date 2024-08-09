@@ -88,7 +88,7 @@ namespace SharpTimerWallLists
         public string CommandPermission { get; set; } = "@css/root";
 
         [JsonPropertyName("ConfigVersion")]
-        public override int Version { get; set; } = 1;
+        public override int Version { get; set; } = 2;
     }
 
     public sealed class DatabaseSettings
@@ -118,8 +118,8 @@ namespace SharpTimerWallLists
     public class PluginSharpTimerWallLists : BasePlugin, IPluginConfig<PluginConfig>
     {
         public override string ModuleName => "SharpTimer Wall Lists";
-        public override string ModuleAuthor => "K4ryuu + Marchand";
-        public override string ModuleVersion => "1.0.0";
+        public override string ModuleAuthor => "Marchand + K4ryuu";
+        public override string ModuleVersion => "1.0.1";
 
         public required PluginConfig Config { get; set; } = new PluginConfig();
 
