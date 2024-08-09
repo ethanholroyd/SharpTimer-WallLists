@@ -57,6 +57,9 @@ namespace SharpTimerWallLists
         [JsonPropertyName("MaxNameLength")]
         public int MaxNameLength { get; set; } = 32; // Default value, 32 is max Steam name length
 
+        [JsonPropertyName("TextAlignment")]
+        public string TextAlignment { get; set; } = "center";
+
         [JsonPropertyName("TitleTextColor")]
         public string TitleTextColor { get; set; } = "Magenta";
 
@@ -592,6 +595,15 @@ namespace SharpTimerWallLists
                 }
             }
 
+            PointWorldTextJustifyHorizontal_t GetTextAlignment()
+            {
+                return Config.TextAlignment.ToLower() switch
+                {
+                    "left" => PointWorldTextJustifyHorizontal_t.POINT_WORLD_TEXT_JUSTIFY_HORIZONTAL_LEFT,
+                    _ => PointWorldTextJustifyHorizontal_t.POINT_WORLD_TEXT_JUSTIFY_HORIZONTAL_CENTER,
+                };
+            }
+
             int maxNameLength = Config.MaxNameLength;
             var linesList = new List<TextLine>();
 
@@ -603,32 +615,9 @@ namespace SharpTimerWallLists
                     Color = ParseColor(Config.TitleTextColor),
                     FontSize = Config.TitleFontSize,
                     FullBright = true,
-                    Scale = Config.TitleTextScale
+                    Scale = Config.TitleTextScale,
+                    JustifyHorizontal = GetTextAlignment()
                 });
-
-                for (int i = 0; i < topList.Count; i++)
-                {
-                    var topplayer = topList[i];
-                    var truncatedName = TruncateString(topplayer.PlayerName, maxNameLength);
-                    var color = i switch
-                    {
-                        0 => ParseColor(Config.FirstPlaceColor),
-                        1 => ParseColor(Config.SecondPlaceColor),
-                        2 => ParseColor(Config.ThirdPlaceColor),
-                        _ => ParseColor(Config.DefaultColor)
-                    };
-
-                    var lineText = $"{i + 1}. {truncatedName} - {topplayer.GlobalPoints} points";
-
-                    linesList.Add(new TextLine
-                    {
-                        Text = lineText,
-                        Color = color,
-                        FontSize = Config.ListFontSize,
-                        FullBright = true,
-                        Scale = Config.ListTextScale
-                    });
-                }
             }
             else if (listType == ListType.Maps)
             {
@@ -638,32 +627,35 @@ namespace SharpTimerWallLists
                     Color = ParseColor(Config.TitleTextColor),
                     FontSize = Config.TitleFontSize,
                     FullBright = true,
-                    Scale = Config.TitleTextScale
+                    Scale = Config.TitleTextScale,
+                    JustifyHorizontal = GetTextAlignment()
                 });
+            }
 
-                for (int i = 0; i < topList.Count; i++)
+            for (int i = 0; i < topList.Count; i++)
+            {
+                var topplayer = topList[i];
+                var truncatedName = TruncateString(topplayer.PlayerName, maxNameLength);
+                var color = i switch
                 {
-                    var topplayer = topList[i];
-                    var truncatedName = TruncateString(topplayer.PlayerName, maxNameLength);
-                    var color = i switch
-                    {
-                        0 => ParseColor(Config.FirstPlaceColor),
-                        1 => ParseColor(Config.SecondPlaceColor),
-                        2 => ParseColor(Config.ThirdPlaceColor),
-                        _ => ParseColor(Config.DefaultColor)
-                    };
+                    0 => ParseColor(Config.FirstPlaceColor),
+                    1 => ParseColor(Config.SecondPlaceColor),
+                    2 => ParseColor(Config.ThirdPlaceColor),
+                    _ => ParseColor(Config.DefaultColor)
+                };
 
-                    var lineText = $"{i + 1}. {topplayer.FormattedTime} - {truncatedName}";
+                var pointsOrTime = listType == ListType.Points ? topplayer.GlobalPoints.ToString() : topplayer.FormattedTime;
+                var lineText = $"{i + 1}. {truncatedName} - {pointsOrTime}";
 
-                    linesList.Add(new TextLine
-                    {
-                        Text = lineText,
-                        Color = color,
-                        FontSize = Config.ListFontSize,
-                        FullBright = true,
-                        Scale = Config.ListTextScale
-                    });
-                }
+                linesList.Add(new TextLine
+                {
+                    Text = lineText,
+                    Color = color,
+                    FontSize = Config.ListFontSize,
+                    FullBright = true,
+                    Scale = Config.ListTextScale,
+                    JustifyHorizontal = GetTextAlignment()
+                });
             }
 
             return linesList;
