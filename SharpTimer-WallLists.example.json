@@ -20,6 +20,7 @@
   "ListFontSize": 24,
   "ListTextScale": 0.35,
   "MaxNameLength": 32,
+  "TextAlignment": "center", // Usage = left, center
   "TitleTextColor": "Magenta", 
   "FirstPlaceColor": "Lime",
   "SecondPlaceColor": "Coral",
@@ -29,5 +30,5 @@
   "TimesListCommand": "timeslist", // The command to add a points list, in game use !pointslist
   "RemoveListCommand": "removelist", // The command to add a points list, in game use !pointslist
   "CommandPermission": "@css/root", // The permission required to use these commands
-  "ConfigVersion": 1
+  "ConfigVersion": 2
 }

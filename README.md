@@ -1,7 +1,7 @@
 <a name="readme-top"></a>
 
 > [!IMPORTANT]
-> Plugin credits go to [K4ryuu](https://github.com/K4ryuu)! They made the base plugin; I made some changes for it to work with SharpTimer and added a few extra features.
+> Credits for the base plugin go to [K4ryuu](https://github.com/K4ryuu)! I made some changes for it to work with SharpTimer and added several extra features.
 
 <!-- PROJECT LOGO -->
 <br />
@@ -9,7 +9,7 @@
   <h1 align="center">SharpTimer Wall Lists</h1>
   <a align="center">Provides two lists to display on the map, a player Points List, and a Map Records List.<br>Dynamically updates on either map start or a given interval.</a><br>
   <br>
-  <img src="https://files.catbox.moe/6s29ib.png" alt="" style="margin: 0;">
+  <img src="https://files.catbox.moe/mjhgo0.png" alt="" style="margin: 0;">
 
   <p align="center">
     <br />
@@ -57,8 +57,9 @@ All commands can be configured, these are the default commands:
 - [X] Merge MapList/PointsList plugins into a single plugin.
 - [X] Add database table prefix to config to support latest version of SharpTimer.
 - [X] Fix inconsistent results for !removelist
-- [X] Add configurabled commands
-- [X] Add configurable permissions
+- [X] Add configurabled commands.
+- [X] Add configurable permissions.
+- [X] Add left alignment.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
