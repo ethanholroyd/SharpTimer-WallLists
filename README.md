@@ -45,7 +45,7 @@ All commands can be configured, these are the default commands:
 
 - A config file will be generated on first use located in _/addons/counterstrikesharp/configs/SharpTimer-WallLists_
 - The coordinates are saved in json files, located in _/addons/counterstrikesharp/plugins/SharpTimer-WallLists/maps_
-- You can see an exmaple with detailed comments here: [SharpTimer-WallList.example.json](https://github.com/M-archand/SharpTimer-WallLists/blob/WallLists/SharpTimer-WallLists.example.json)
+- You can see an example with detailed comments here: [SharpTimer-WallList.example.json](https://github.com/M-archand/SharpTimer-WallLists/blob/WallLists/SharpTimer-WallLists.example.json)
 <!-- ROADMAP -->
 
 ## Roadmap
