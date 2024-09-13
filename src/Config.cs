@@ -65,6 +65,9 @@ namespace SharpTimerWallLists
         [JsonPropertyName("TimesListCommand")]
         public string TimesListCommand { get; set; } = "timeslist";
 
+        [JsonPropertyName("CompletionsListCommand")]
+        public string CompletionsListCommand { get; set; } = "timeslist";
+
         [JsonPropertyName("RemoveListCommand")]
         public string RemoveListCommand { get; set; } = "removelist";
 
@@ -72,7 +75,7 @@ namespace SharpTimerWallLists
         public string CommandPermission { get; set; } = "@css/root";
 
         [JsonPropertyName("ConfigVersion")]
-        public override int Version { get; set; } = 2;
+        public override int Version { get; set; } = 3;
     }
 
     public sealed class DatabaseSettings
