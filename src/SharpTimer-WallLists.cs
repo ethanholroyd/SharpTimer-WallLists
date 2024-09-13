@@ -30,7 +30,6 @@ namespace SharpTimerWallLists
         private List<int> _currentPointsList = new();
         private List<int> _currentMapList = new();
         private CounterStrikeSharp.API.Modules.Timers.Timer? _updateTimer;
-        private string _gameDirectory = Server.GameDirectory;
         private string? _databasePath;
         private string? _connectionString;
 
@@ -112,7 +111,7 @@ namespace SharpTimerWallLists
             }
             else if (Config.DatabaseType == 2)
             {
-                _databasePath = Path.Combine(_gameDirectory, "csgo", "cfg", "SharpTimer", "database.db");
+                _databasePath = Path.Combine(Server.GameDirectory, "csgo", "cfg", "SharpTimer", "database.db");
                 _connectionString = $"Data Source={_databasePath};Version=3;";
             }
             else if (Config.DatabaseType == 3)
@@ -563,9 +562,10 @@ namespace SharpTimerWallLists
 
         public async Task<List<PlayerPlace>> GetTopPlayersAsync(int topCount, ListType listType, string mapName)
         {
-            string tablePrefix = Config.DatabaseSettings.TablePrefix;
             string query;
-            if (Config.DatabaseType == 1)
+            string tablePrefix = Config.DatabaseSettings.TablePrefix;
+
+            if (Config.DatabaseType == 1) // MySQL
             {
                 query = listType switch
                 {
@@ -598,8 +598,27 @@ namespace SharpTimerWallLists
                     LIMIT @TopCount",
                     _ => throw new ArgumentException("Invalid list type")
                 };
+
+                try
+                {
+                    using var connection = new MySqlConnection(_connectionString);
+                    object parameters = listType switch
+                    {
+                        ListType.Points => new { TopCount = topCount },
+                        ListType.Maps => new { TopCount = topCount, MapName = mapName },
+                        _ => throw new ArgumentException("Invalid list type")
+                    };
+
+                    return (await connection.QueryAsync<PlayerPlace>(query, parameters)).ToList();
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, $"Failed to retrieve top players from MySQL for {listType}, please check your database credentials in the config");
+                    return new List<PlayerPlace>();
+                }
             }
-            else if (Config.DatabaseType == 2)
+
+            else if (Config.DatabaseType == 2) // SQLite
             {
                 query = listType switch
                 {
@@ -632,8 +651,27 @@ namespace SharpTimerWallLists
                     LIMIT @TopCount",
                     _ => throw new ArgumentException("Invalid list type")
                 };
+
+                try
+                {
+                    using var connection = new SQLiteConnection(_connectionString);
+                    connection.Open();
+                        object parameters = listType switch
+                        {
+                            ListType.Points => new { TopCount = topCount },
+                            ListType.Maps => new { TopCount = topCount, MapName = mapName },
+                            _ => throw new ArgumentException("Invalid list type")
+                        };
+
+                        return (await connection.QueryAsync<PlayerPlace>(query, parameters)).ToList();
+                }
+                catch (Exception)
+                {
+                    return new List<PlayerPlace>();
+                }
             }
-            else if (Config.DatabaseType == 3)
+
+            else if (Config.DatabaseType == 3) // PostgreSQL
             {
                 query = listType switch
                 {
@@ -666,73 +704,18 @@ namespace SharpTimerWallLists
                     LIMIT @TopCount",
                     _ => throw new ArgumentException("Invalid list type")
                 };
-            }
-            else
-            {
-                Logger.LogError("Invalid DatabaseType specified in config");
-                return new List<PlayerPlace>();
-            }
 
-            if (Config.DatabaseType == 1)
-            {
                 try
                 {
-                    using (var connection = new MySqlConnection(_connectionString))
+                    using var connection = new NpgsqlConnection(_connectionString);
+                    object parameters = listType switch
                     {
-                        object parameters = listType switch
-                        {
-                            ListType.Points => new { TopCount = topCount },
-                            ListType.Maps => new { TopCount = topCount, MapName = mapName },
-                            _ => throw new ArgumentException("Invalid list type")
-                        };
+                        ListType.Points => new { TopCount = topCount },
+                        ListType.Maps => new { TopCount = topCount, MapName = mapName },
+                        _ => throw new ArgumentException("Invalid list type")
+                    };
 
-                        return (await connection.QueryAsync<PlayerPlace>(query, parameters)).ToList();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogError(ex, $"Failed to retrieve top players from MySQL for {listType}, please check your database credentials in the config");
-                    return new List<PlayerPlace>();
-                }
-            }
-            else if (Config.DatabaseType == 2)
-            {
-                try
-                {
-                    using (var connection = new SQLiteConnection(_connectionString))
-                    {
-                        connection.Open();
-                        object parameters = listType switch
-                        {
-                            ListType.Points => new { TopCount = topCount },
-                            ListType.Maps => new { TopCount = topCount, MapName = mapName },
-                            _ => throw new ArgumentException("Invalid list type")
-                        };
-
-                        return (await connection.QueryAsync<PlayerPlace>(query, parameters)).ToList();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogError(ex, $"Failed to retrieve top players from SQLite. Make sure your database is located at cfg/SharpTimer/database.db");
-                    return new List<PlayerPlace>();
-                }
-            }
-            else if (Config.DatabaseType == 3)
-            {
-                try
-                {
-                    using (var connection = new NpgsqlConnection(_connectionString))
-                    {
-                        object parameters = listType switch
-                        {
-                            ListType.Points => new { TopCount = topCount },
-                            ListType.Maps => new { TopCount = topCount, MapName = mapName },
-                            _ => throw new ArgumentException("Invalid list type")
-                        };
-
-                        return (await connection.QueryAsync<PlayerPlace>(query, parameters)).ToList();
-                    }
+                    return (await connection.QueryAsync<PlayerPlace>(query, parameters)).ToList();
                 }
                 catch (Exception ex)
                 {
@@ -746,6 +729,7 @@ namespace SharpTimerWallLists
                 return new List<PlayerPlace>();
             }
         }
+
     }
 
     public enum ListType
