@@ -26,6 +26,9 @@ namespace SharpTimerWallLists
         [JsonPropertyName("MapsTitleText")]
         public string MapsTitleText { get; set; } = "|---- Map Records ----|";
 
+        [JsonPropertyName("CompletionsTitleText")]
+        public string CompletionsTitleText { get; set; } = "|--- Maps Completed ---|";
+
         [JsonPropertyName("TitleFontSize")]
         public int TitleFontSize { get; set; } = 26;
 
