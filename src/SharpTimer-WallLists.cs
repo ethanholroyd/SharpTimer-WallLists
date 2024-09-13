@@ -29,6 +29,7 @@ namespace SharpTimerWallLists
         public static PluginCapability<IK4WorldTextSharedAPI> Capability_SharedAPI { get; } = new("k4-worldtext:sharedapi");
         private List<int> _currentPointsList = new();
         private List<int> _currentMapList = new();
+        private List<int> _currentCompletionsList = new();
         private CounterStrikeSharp.API.Modules.Timers.Timer? _updateTimer;
         private string? _databasePath;
         private string? _connectionString;
@@ -49,6 +50,7 @@ namespace SharpTimerWallLists
 
             AddCommand($"css_{Config.PointsListCommand}", "Sets up the points list", OnPointsListAdd);
             AddCommand($"css_{Config.TimesListCommand}", "Sets up the map records list", OnMapListAdd);
+            AddCommand($"css_{Config.CompletionsListCommand}", "Sets up the map completions list", OnCompletionsListAdd);
             AddCommand($"css_{Config.RemoveListCommand}", "Removes the closest list, whether points or map", OnRemoveList);
 
             if (Config.TimeBasedUpdate)
@@ -74,9 +76,11 @@ namespace SharpTimerWallLists
                 {
                     _currentPointsList.ForEach(id => checkAPI.RemoveWorldText(id, false));
                     _currentMapList.ForEach(id => checkAPI.RemoveWorldText(id, false));
+                    _currentCompletionsList.ForEach(id => checkAPI.RemoveWorldText(id, false));
                 }
                 _currentPointsList.Clear();
                 _currentMapList.Clear();
+                _currentCompletionsList.Clear();
             });
         }
 
@@ -87,9 +91,11 @@ namespace SharpTimerWallLists
             {
                 _currentPointsList.ForEach(id => checkAPI.RemoveWorldText(id, false));
                 _currentMapList.ForEach(id => checkAPI.RemoveWorldText(id, false));
+                _currentCompletionsList.ForEach(id => checkAPI.RemoveWorldText(id, false));
             }
             _currentPointsList.Clear();
             _currentMapList.Clear();
+            _currentCompletionsList.Clear();
             _updateTimer?.Kill();
         }
 
@@ -145,7 +151,15 @@ namespace SharpTimerWallLists
             CreateTopList(player, command, ListType.Maps);
         }
 
-        [ConsoleCommand($"css_{DefaultCommandNames.RemoveListCommand}", "Removes the closest list, whether points or map")]
+        [ConsoleCommand($"css_{DefaultCommandNames.CompletionsListCommand}", "Sets up the map completions list")]
+        [RequiresPermissions($"{DefaultCommandNames.CommandPermission}")]
+        public void OnCompletionsListAdd(CCSPlayerController? player, CommandInfo? command)
+        {
+            if (player == null || command == null) return;
+            CreateTopList(player, command, ListType.Completions);
+        }
+
+        [ConsoleCommand($"css_{DefaultCommandNames.RemoveListCommand}", "Removes the closest list, whether points, map time, or completions")]
         [RequiresPermissions($"{DefaultCommandNames.CommandPermission}")]
         public void OnRemoveList(CCSPlayerController? player, CommandInfo? command)
         {
@@ -185,6 +199,8 @@ namespace SharpTimerWallLists
                                 _currentPointsList.Add(messageID);
                             if (listType == ListType.Maps)
                                 _currentMapList.Add(messageID);
+                            if (listType == ListType.Completions)
+                                _currentCompletionsList.Add(messageID);
 
                             var lineList = checkAPI.GetWorldTextLineEntities(messageID);
                             if (lineList?.Count > 0)
@@ -392,9 +408,11 @@ namespace SharpTimerWallLists
 
             var pointsPath = Path.Combine(mapsDirectory, $"{mapName}_pointslist.json");
             var mapsPath = Path.Combine(mapsDirectory, $"{mapName}_timeslist.json");
+            var completionsPath = Path.Combine(mapsDirectory, $"{mapName}_completionslist.json");
 
             LoadWorldTextFromFile(pointsPath, ListType.Points, mapName);
             LoadWorldTextFromFile(mapsPath, ListType.Maps, mapName);
+            LoadWorldTextFromFile(mapsPath, ListType.Completions, mapName);
         }
 
         public static Vector ParseVector(string vectorString)
@@ -433,9 +451,11 @@ namespace SharpTimerWallLists
                 {
                     var pointsTopList = await GetTopPlayersAsync(Config.TopCount, ListType.Points, mapName);
                     var mapsTopList = await GetTopPlayersAsync(Config.TopCount, ListType.Maps, mapName);
+                    var completionsTopList = await GetTopPlayersAsync(Config.TopCount, ListType.Completions, mapName);
 
                     var pointsLinesList = GetTopListTextLines(pointsTopList, ListType.Points);
                     var mapsLinesList = GetTopListTextLines(mapsTopList, ListType.Maps);
+                    var completionsLinesList = GetTopListTextLines(mapsTopList, ListType.Completions);
 
                     Server.NextWorldUpdate(() =>
                     {
@@ -446,6 +466,7 @@ namespace SharpTimerWallLists
                             {
                                 _currentPointsList.ForEach(id => checkAPI.UpdateWorldText(id, pointsLinesList));
                                 _currentMapList.ForEach(id => checkAPI.UpdateWorldText(id, mapsLinesList));
+                                _currentCompletionsList.ForEach(id => checkAPI.UpdateWorldText(id, completionsLinesList));
                             }
                         }
                         catch (Exception ex)
@@ -605,6 +626,7 @@ namespace SharpTimerWallLists
                     object parameters = listType switch
                     {
                         ListType.Points => new { TopCount = topCount },
+                        ListType.Completions => new { TopCount = topCount },
                         ListType.Maps => new { TopCount = topCount, MapName = mapName },
                         _ => throw new ArgumentException("Invalid list type")
                     };
@@ -660,6 +682,7 @@ namespace SharpTimerWallLists
                         {
                             ListType.Points => new { TopCount = topCount },
                             ListType.Maps => new { TopCount = topCount, MapName = mapName },
+                            ListType.Completions => new { TopCount = topCount },
                             _ => throw new ArgumentException("Invalid list type")
                         };
 
@@ -712,6 +735,7 @@ namespace SharpTimerWallLists
                     {
                         ListType.Points => new { TopCount = topCount },
                         ListType.Maps => new { TopCount = topCount, MapName = mapName },
+                        ListType.Completions => new { TopCount = topCount },
                         _ => throw new ArgumentException("Invalid list type")
                     };
 
@@ -735,7 +759,8 @@ namespace SharpTimerWallLists
     public enum ListType
     {
         Points,
-        Maps
+        Maps,
+        Completions
     }
 
     public class PlayerPlace
@@ -744,12 +769,14 @@ namespace SharpTimerWallLists
         public int GlobalPoints { get; set; }
         public string? FormattedTime { get; set; }
         public int Placement { get; set; }
+        public int Completions { get; set; }
     }
 
     public static class DefaultCommandNames
     {
         public const string PointsListCommand = "pointslist";
         public const string TimesListCommand = "timeslist";
+        public const string CompletionsListCommand = "completionslist";
         public const string RemoveListCommand = "removelist";
         public const string CommandPermission = "@css/root";
     }
