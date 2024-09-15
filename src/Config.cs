@@ -23,8 +23,8 @@ namespace SharpTimerWallLists
         [JsonPropertyName("PointsTitleText")]
         public string PointsTitleText { get; set; } = "|--- Points Leaders ---|";
 
-        [JsonPropertyName("MapsTitleText")]
-        public string MapsTitleText { get; set; } = "|---- Map Records ----|";
+        [JsonPropertyName("TimesTitleText")]
+        public string TimesTitleText { get; set; } = "|---- Map Records ----|";
 
         [JsonPropertyName("CompletionsTitleText")]
         public string CompletionsTitleText { get; set; } = "|--- Maps Completed ---|";
@@ -75,7 +75,7 @@ namespace SharpTimerWallLists
         public string TimesListCommand { get; set; } = "timeslist";
 
         [JsonPropertyName("CompletionsListCommand")]
-        public string CompletionsListCommand { get; set; } = "timeslist";
+        public string CompletionsListCommand { get; set; } = "completionslist";
 
         [JsonPropertyName("RemoveListCommand")]
         public string RemoveListCommand { get; set; } = "removelist";
@@ -91,12 +91,12 @@ namespace SharpTimerWallLists
     {
         [JsonPropertyName("host")]
         public string Host { get; set; } = "localhost";
-
-        [JsonPropertyName("username")]
-        public string Username { get; set; } = "root";
-
+        
         [JsonPropertyName("database")]
         public string Database { get; set; } = "database";
+
+        [JsonPropertyName("username")]
+        public string Username { get; set; } = "user";
 
         [JsonPropertyName("password")]
         public string Password { get; set; } = "password";
