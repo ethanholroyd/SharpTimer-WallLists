@@ -1,19 +1,19 @@
 <a name="readme-top"></a>
 
 > [!IMPORTANT]
-> Credits for the base plugin go to [K4ryuu](https://github.com/K4ryuu)! I made some changes for it to work with SharpTimer and added several extra features.
+> Credits for the base plugin go to [K4ryuu](https://github.com/K4ryuu)! I made changes to it to work with SharpTimer and added several extra features.
 
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
   <h1 align="center">SharpTimer Wall Lists</h1>
-  <a align="center">Provides two lists to display on the map, a player Points List, and a Map Records List.<br>Dynamically updates on either map start or a given interval.</a><br>
+  <a align="center">Provides three lists to display on the map, a player Points List, and a Map Time List, and a # of Map Completions List.<br>Dynamically updates on either map start or a given interval.</a><br>
   <br>
   <img src="https://files.catbox.moe/mjhgo0.png" alt="" style="margin: 0;">
 
   <p align="center">
     <br />
-    <a href="https://github.com/M-archand/SharpTimer-WallLists/releases/tag/1.0.0">Download</a>
+    <a href="https://github.com/M-archand/SharpTimer-WallLists/releases/tag/1.0.2">Download</a>
   </p>
 </div>
 
@@ -35,8 +35,9 @@ To use this server addon, you'll need the following dependencies installed:
 
 Default Access: @css/root, can be configured.
 All commands can be configured, these are the default commands:
-- !pointslist - Create a points list in front of the player and save it to config file.
-- !timeslist  - Create a map records list for the current map in front of the player and save it to config file.
+- !pointslist - Create a points list in front of the player and save it to a config file.
+- !timeslist  - Create a map records list for the current map in front of the player and save it to a config file.
+- !completionslist - Create a # of map completions list in fron of the player and save it to a config file.
 - !removelist - Remove the closest list from your position. (100 units max)
 
 <!-- CONFIG -->
@@ -60,6 +61,8 @@ All commands can be configured, these are the default commands:
 - [X] Add configurabled commands.
 - [X] Add configurable permissions.
 - [X] Add left alignment.
+- [X] Add a Map Completions List.
+- [X] Add alignment options for each type of list.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
