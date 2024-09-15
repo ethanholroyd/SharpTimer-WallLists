@@ -14,21 +14,25 @@
     "table-prefix": "" // Empty means you have no prefix (PlayerRecords, PlayerStats). "XX_" means your tables have a prefix (XX_PlayerRecords, XX_PlayerStats)
   },
   "PointsTitleText": "|--- Points Leaders ---|", // The title for the list
-  "MapsTitleText": "|---- Map Records ----|", // The title for the list
+  "TimesTitleText": "|---- Map Records ----|", // The title for the list
+  "CompletionsTitleText": "|--- Maps Completed ---|",
   "TitleFontSize": 26,
   "TitleTextScale": 0.45,
   "ListFontSize": 24,
   "ListTextScale": 0.35,
   "MaxNameLength": 32,
-  "TextAlignment": "center", // Usage = left, center
+  "PointsTextAlignment": "center", // Usage = left, center
+  "TimesTextAlignment": "center", // Usage = left, center
+  "CompletionsTextAlignment": "center", // Usage = left, center
   "TitleTextColor": "Magenta", 
   "FirstPlaceColor": "Lime",
   "SecondPlaceColor": "Coral",
   "ThirdPlaceColor": "Cyan",
   "DefaultColor": "White", // The color for any line besides 1. 2. 3.
   "PointsListCommand": "pointslist", // The command to add a points list, in game use !pointslist
-  "TimesListCommand": "timeslist", // The command to add a points list, in game use !pointslist
-  "RemoveListCommand": "removelist", // The command to add a points list, in game use !pointslist
+  "TimesListCommand": "timeslist", // The command to add a times list, in game use !timeslist
+  "CompletionsListCommand": "completionslist", // The command to add a completions list, in game use !completionslist
+  "RemoveListCommand": "removelist", // The command to remove a list, in game use !removelist
   "CommandPermission": "@css/root", // The permission required to use these commands
-  "ConfigVersion": 2
+  "ConfigVersion": 3
 }
