@@ -23,8 +23,11 @@ namespace SharpTimerWallLists
         [JsonPropertyName("PointsTitleText")]
         public string PointsTitleText { get; set; } = "|--- Points Leaders ---|";
 
-        [JsonPropertyName("MapsTitleText")]
-        public string MapsTitleText { get; set; } = "|---- Map Records ----|";
+        [JsonPropertyName("TimesTitleText")]
+        public string TimesTitleText { get; set; } = "|---- Map Records ----|";
+
+        [JsonPropertyName("CompletionsTitleText")]
+        public string CompletionsTitleText { get; set; } = "|--- Maps Completed ---|";
 
         [JsonPropertyName("TitleFontSize")]
         public int TitleFontSize { get; set; } = 26;
@@ -41,8 +44,14 @@ namespace SharpTimerWallLists
         [JsonPropertyName("MaxNameLength")]
         public int MaxNameLength { get; set; } = 32; // Default value, 32 is max Steam name length
 
-        [JsonPropertyName("TextAlignment")]
-        public string TextAlignment { get; set; } = "center";
+        [JsonPropertyName("PointsTextAlignment")]
+        public string PointsTextAlignment { get; set; } = "center";
+
+        [JsonPropertyName("TimesTextAlignment")]
+        public string TimesTextAlignment { get; set; } = "center";
+
+        [JsonPropertyName("CompletionsTextAlignment")]
+        public string CompletionsTextAlignment { get; set; } = "center";
 
         [JsonPropertyName("TitleTextColor")]
         public string TitleTextColor { get; set; } = "Magenta";
@@ -65,6 +74,9 @@ namespace SharpTimerWallLists
         [JsonPropertyName("TimesListCommand")]
         public string TimesListCommand { get; set; } = "timeslist";
 
+        [JsonPropertyName("CompletionsListCommand")]
+        public string CompletionsListCommand { get; set; } = "completionslist";
+
         [JsonPropertyName("RemoveListCommand")]
         public string RemoveListCommand { get; set; } = "removelist";
 
@@ -72,19 +84,19 @@ namespace SharpTimerWallLists
         public string CommandPermission { get; set; } = "@css/root";
 
         [JsonPropertyName("ConfigVersion")]
-        public override int Version { get; set; } = 2;
+        public override int Version { get; set; } = 3;
     }
 
     public sealed class DatabaseSettings
     {
         [JsonPropertyName("host")]
         public string Host { get; set; } = "localhost";
-
-        [JsonPropertyName("username")]
-        public string Username { get; set; } = "root";
-
+        
         [JsonPropertyName("database")]
         public string Database { get; set; } = "database";
+
+        [JsonPropertyName("username")]
+        public string Username { get; set; } = "user";
 
         [JsonPropertyName("password")]
         public string Password { get; set; } = "password";
