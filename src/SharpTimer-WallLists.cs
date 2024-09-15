@@ -148,7 +148,7 @@ namespace SharpTimerWallLists
         public void OnMapListAdd(CCSPlayerController? player, CommandInfo? command)
         {
             if (player == null || command == null) return;
-            CreateTopList(player, command, ListType.Maps);
+            CreateTopList(player, command, ListType.Times);
         }
 
         [ConsoleCommand($"css_{DefaultCommandNames.CompletionsListCommand}", "Sets up the map completions list")]
@@ -197,7 +197,7 @@ namespace SharpTimerWallLists
                             int messageID = checkAPI.AddWorldTextAtPlayer(player, TextPlacement.Wall, linesList);
                             if (listType == ListType.Points)
                                 _currentPointsList.Add(messageID);
-                            if (listType == ListType.Maps)
+                            if (listType == ListType.Times)
                                 _currentMapList.Add(messageID);
                             if (listType == ListType.Completions)
                                 _currentCompletionsList.Add(messageID);
@@ -334,7 +334,7 @@ namespace SharpTimerWallLists
 
                 var filename = listType switch
                 {
-                    ListType.Maps => $"{mapName}_timeslist.json",
+                    ListType.Times => $"{mapName}_timeslist.json",
                     ListType.Points => $"{mapName}_pointslist.json",
                     ListType.Completions => $"{mapName}_completionslist.json",
                     _ => throw new ArgumentException("Invalid list type")
@@ -401,7 +401,7 @@ namespace SharpTimerWallLists
                                         var messageID = checkAPI.AddWorldText(TextPlacement.Wall, linesList, ParseVector(worldTextData.Location), ParseQAngle(worldTextData.Rotation));
                                         if (listType == ListType.Points)
                                             _currentPointsList.Add(messageID);
-                                        else if (listType == ListType.Maps)
+                                        else if (listType == ListType.Times)
                                             _currentMapList.Add(messageID);
                                         else if (listType == ListType.Completions)
                                             _currentCompletionsList.Add(messageID);
@@ -428,11 +428,11 @@ namespace SharpTimerWallLists
             var mapsDirectory = Path.Combine(ModuleDirectory, "maps");
 
             var pointsPath = Path.Combine(mapsDirectory, $"{mapName}_pointslist.json");
-            var mapsPath = Path.Combine(mapsDirectory, $"{mapName}_timeslist.json");
+            var timesPath = Path.Combine(mapsDirectory, $"{mapName}_timeslist.json");
             var completionsPath = Path.Combine(mapsDirectory, $"{mapName}_completionslist.json");
 
             LoadWorldTextFromFile(pointsPath, ListType.Points, mapName);
-            LoadWorldTextFromFile(mapsPath, ListType.Maps, mapName);
+            LoadWorldTextFromFile(timesPath, ListType.Times, mapName);
             LoadWorldTextFromFile(completionsPath, ListType.Completions, mapName);
         }
 
@@ -471,11 +471,11 @@ namespace SharpTimerWallLists
                 try
                 {
                     var pointsTopList = await GetTopPlayersAsync(Config.TopCount, ListType.Points, mapName);
-                    var mapsTopList = await GetTopPlayersAsync(Config.TopCount, ListType.Maps, mapName);
+                    var timesTopList = await GetTopPlayersAsync(Config.TopCount, ListType.Times, mapName);
                     var completionsTopList = await GetTopPlayersAsync(Config.TopCount, ListType.Completions, mapName);
 
                     var pointsLinesList = GetTopListTextLines(pointsTopList, ListType.Points);
-                    var mapsLinesList = GetTopListTextLines(mapsTopList, ListType.Maps);
+                    var timesLinesList = GetTopListTextLines(timesTopList, ListType.Times);
                     var completionsLinesList = GetTopListTextLines(completionsTopList, ListType.Completions);
 
                     Server.NextWorldUpdate(() =>
@@ -486,7 +486,7 @@ namespace SharpTimerWallLists
                             if (checkAPI != null)
                             {
                                 _currentPointsList.ForEach(id => checkAPI.UpdateWorldText(id, pointsLinesList));
-                                _currentMapList.ForEach(id => checkAPI.UpdateWorldText(id, mapsLinesList));
+                                _currentMapList.ForEach(id => checkAPI.UpdateWorldText(id, timesLinesList));
                                 _currentCompletionsList.ForEach(id => checkAPI.UpdateWorldText(id, completionsLinesList));
                             }
                         }
@@ -541,7 +541,7 @@ namespace SharpTimerWallLists
                 string alignment = listType switch
                 {
                     ListType.Points => Config.PointsTextAlignment.ToLower(),
-                    ListType.Maps => Config.TimesTextAlignment.ToLower(),
+                    ListType.Times => Config.TimesTextAlignment.ToLower(),
                     ListType.Completions => Config.CompletionsTextAlignment.ToLower(),
                     _ => "center"
                 };
@@ -570,11 +570,11 @@ namespace SharpTimerWallLists
 
                 });
             }
-            else if (listType == ListType.Maps)
+            else if (listType == ListType.Times)
             {
                 linesList.Add(new TextLine
                 {
-                    Text = Config.MapsTitleText,
+                    Text = Config.TimesTitleText,
                     Color = ParseColor(Config.TitleTextColor),
                     FontSize = Config.TitleFontSize,
                     FullBright = true,
@@ -612,7 +612,7 @@ namespace SharpTimerWallLists
                     var pointsOrTimeOrCompletions = listType switch
                     {
                         ListType.Points => topplayer.GlobalPoints.ToString(),
-                        ListType.Maps => topplayer.FormattedTime,
+                        ListType.Times => topplayer.FormattedTime,
                         ListType.Completions => topplayer.Completions.ToString(),
                         _ => string.Empty
                     };
@@ -656,7 +656,7 @@ namespace SharpTimerWallLists
                     ORDER BY GlobalPoints DESC
                     LIMIT @TopCount",
 
-                    ListType.Maps => $@"
+                    ListType.Times => $@"
                     WITH RankedPlayers AS (
                         SELECT
                             SteamID,
@@ -696,7 +696,7 @@ namespace SharpTimerWallLists
                     {
                         ListType.Points => new { TopCount = topCount },
                         ListType.Completions => new { TopCount = topCount },
-                        ListType.Maps => new { TopCount = topCount, MapName = mapName },
+                        ListType.Times => new { TopCount = topCount, MapName = mapName },
                         _ => throw new ArgumentException("Invalid list type")
                     };
 
@@ -727,7 +727,7 @@ namespace SharpTimerWallLists
                     ORDER BY GlobalPoints DESC
                     LIMIT @TopCount",
 
-                    ListType.Maps => $@"
+                    ListType.Times => $@"
                     WITH RankedPlayers AS (
                         SELECT
                             SteamID,
@@ -767,7 +767,7 @@ namespace SharpTimerWallLists
                         object parameters = listType switch
                         {
                             ListType.Points => new { TopCount = topCount },
-                            ListType.Maps => new { TopCount = topCount, MapName = mapName },
+                            ListType.Times => new { TopCount = topCount, MapName = mapName },
                             ListType.Completions => new { TopCount = topCount },
                             _ => throw new ArgumentException("Invalid list type")
                         };
@@ -798,7 +798,7 @@ namespace SharpTimerWallLists
                     ORDER BY ""GlobalPoints"" DESC
                     LIMIT @TopCount",
 
-                    ListType.Maps => $@"
+                    ListType.Times => $@"
                     WITH RankedPlayers AS (
                         SELECT
                             ""SteamID"",
@@ -838,7 +838,7 @@ namespace SharpTimerWallLists
                     object parameters = listType switch
                     {
                         ListType.Points => new { TopCount = topCount },
-                        ListType.Maps => new { TopCount = topCount, MapName = mapName },
+                        ListType.Times => new { TopCount = topCount, MapName = mapName },
                         ListType.Completions => new { TopCount = topCount },
                         _ => throw new ArgumentException("Invalid list type")
                     };
@@ -863,7 +863,7 @@ namespace SharpTimerWallLists
     public enum ListType
     {
         Points,
-        Maps,
+        Times,
         Completions
     }
 
@@ -872,7 +872,6 @@ namespace SharpTimerWallLists
         public required string PlayerName { get; set; }
         public int GlobalPoints { get; set; }
         public string? FormattedTime { get; set; }
-        public int Placement { get; set; }
         public int Completions { get; set; }
     }
 
