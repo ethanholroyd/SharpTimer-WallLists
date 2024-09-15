@@ -44,8 +44,14 @@ namespace SharpTimerWallLists
         [JsonPropertyName("MaxNameLength")]
         public int MaxNameLength { get; set; } = 32; // Default value, 32 is max Steam name length
 
-        [JsonPropertyName("TextAlignment")]
-        public string TextAlignment { get; set; } = "center";
+        [JsonPropertyName("PointsTextAlignment")]
+        public string PointsTextAlignment { get; set; } = "center";
+
+        [JsonPropertyName("TimesTextAlignment")]
+        public string TimesTextAlignment { get; set; } = "center";
+
+        [JsonPropertyName("CompletionsTextAlignment")]
+        public string CompletionsTextAlignment { get; set; } = "center";
 
         [JsonPropertyName("TitleTextColor")]
         public string TitleTextColor { get; set; } = "Magenta";

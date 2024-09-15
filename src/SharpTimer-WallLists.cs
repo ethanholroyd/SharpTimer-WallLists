@@ -536,12 +536,21 @@ namespace SharpTimerWallLists
                 }
             }
 
-            PointWorldTextJustifyHorizontal_t GetTextAlignment()
+            PointWorldTextJustifyHorizontal_t GetTextAlignment(ListType listType)
             {
-                return Config.TextAlignment.ToLower() switch
+                string alignment = listType switch
+                {
+                    ListType.Points => Config.PointsTextAlignment.ToLower(),
+                    ListType.Maps => Config.TimesTextAlignment.ToLower(),
+                    ListType.Completions => Config.CompletionsTextAlignment.ToLower(),
+                    _ => "center"
+                };
+
+                return alignment switch
                 {
                     "left" => PointWorldTextJustifyHorizontal_t.POINT_WORLD_TEXT_JUSTIFY_HORIZONTAL_LEFT,
-                    _ => PointWorldTextJustifyHorizontal_t.POINT_WORLD_TEXT_JUSTIFY_HORIZONTAL_CENTER,
+                    "center" => PointWorldTextJustifyHorizontal_t.POINT_WORLD_TEXT_JUSTIFY_HORIZONTAL_CENTER,
+                    _ => PointWorldTextJustifyHorizontal_t.POINT_WORLD_TEXT_JUSTIFY_HORIZONTAL_CENTER
                 };
             }
 
@@ -557,7 +566,8 @@ namespace SharpTimerWallLists
                     FontSize = Config.TitleFontSize,
                     FullBright = true,
                     Scale = Config.TitleTextScale,
-                    JustifyHorizontal = GetTextAlignment()
+                    JustifyHorizontal = GetTextAlignment(listType)
+
                 });
             }
             else if (listType == ListType.Maps)
@@ -569,7 +579,8 @@ namespace SharpTimerWallLists
                     FontSize = Config.TitleFontSize,
                     FullBright = true,
                     Scale = Config.TitleTextScale,
-                    JustifyHorizontal = GetTextAlignment()
+                    JustifyHorizontal = GetTextAlignment(listType)
+
                 });
             }
             else if (listType == ListType.Completions)
@@ -581,7 +592,8 @@ namespace SharpTimerWallLists
                     FontSize = Config.TitleFontSize,
                     FullBright = true,
                     Scale = Config.TitleTextScale,
-                    JustifyHorizontal = GetTextAlignment()
+                    JustifyHorizontal = GetTextAlignment(listType)
+
                 });
             }
 
@@ -613,7 +625,8 @@ namespace SharpTimerWallLists
                     FontSize = Config.ListFontSize,
                     FullBright = true,
                     Scale = Config.ListTextScale,
-                    JustifyHorizontal = GetTextAlignment()
+                    JustifyHorizontal = GetTextAlignment(listType)
+
                 });
             }
 
