@@ -29,6 +29,15 @@ namespace SharpTimerWallLists
         [JsonPropertyName("CompletionsTitleText")]
         public string CompletionsTitleText { get; set; } = "|--- Maps Completed ---|";
 
+        [JsonPropertyName("VipPointsTitleText")]
+        public string VipPointsTitleText { get; set; } = "|--- VIP Points Leaders ---|";
+
+        [JsonPropertyName("VipTimesTitleText")]
+        public string VipTimesTitleText { get; set; } = "|---- VIP Map Records ----|";
+
+        [JsonPropertyName("VipCompletionsTitleText")]
+        public string VipCompletionsTitleText { get; set; } = "|--- VIP Maps Completed ---|";
+
         [JsonPropertyName("TitleFontSize")]
         public int TitleFontSize { get; set; } = 26;
 
@@ -76,6 +85,15 @@ namespace SharpTimerWallLists
 
         [JsonPropertyName("CompletionsListCommand")]
         public string CompletionsListCommand { get; set; } = "completionslist";
+
+        [JsonPropertyName("VIPPointsListCommand")]
+        public string VipPointsListCommand { get; set; } = "vip_pointslist";
+
+        [JsonPropertyName("VIPTimesListCommand")]
+        public string VipTimesListCommand { get; set; } = "vip_timeslist";
+
+        [JsonPropertyName("VIPCompletionsListCommand")]
+        public string VipCompletionsListCommand { get; set; } = "vip_completionslist";
 
         [JsonPropertyName("RemoveListCommand")]
         public string RemoveListCommand { get; set; } = "removelist";

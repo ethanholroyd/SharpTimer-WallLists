@@ -30,6 +30,13 @@ namespace SharpTimerWallLists
         private List<int> _currentPointsList = new();
         private List<int> _currentMapList = new();
         private List<int> _currentCompletionsList = new();
+
+        //VIP lists
+        private List<int> _currentVipPointsList = new();
+        private List<int> _currentVipMapList = new();
+        private List<int> _currentVipCompletionsList = new();
+        // 
+
         private CounterStrikeSharp.API.Modules.Timers.Timer? _updateTimer;
         private string? _databasePath;
         private string? _connectionString;
@@ -51,6 +58,11 @@ namespace SharpTimerWallLists
             AddCommand($"css_{Config.PointsListCommand}", "Sets up the points list", OnPointsListAdd);
             AddCommand($"css_{Config.TimesListCommand}", "Sets up the map records list", OnMapListAdd);
             AddCommand($"css_{Config.CompletionsListCommand}", "Sets up the map completions list", OnCompletionsListAdd);
+            // VIP
+            AddCommand($"css_{Config.VipPointsListCommand}", "Sets up the points list", OnVipPointsListAdd);
+            AddCommand($"css_{Config.VipTimesListCommand}", "Sets up the map records list", OnVipMapListAdd);
+            AddCommand($"css_{Config.VipCompletionsListCommand}", "Sets up the map completions list", OnVipCompletionsListAdd);
+            //
             AddCommand($"css_{Config.RemoveListCommand}", "Removes the closest list, whether points or map", OnRemoveList);
 
             if (Config.TimeBasedUpdate)
@@ -77,10 +89,18 @@ namespace SharpTimerWallLists
                     _currentPointsList.ForEach(id => checkAPI.RemoveWorldText(id, false));
                     _currentMapList.ForEach(id => checkAPI.RemoveWorldText(id, false));
                     _currentCompletionsList.ForEach(id => checkAPI.RemoveWorldText(id, false));
+                    //Vip
+                    _currentVipPointsList.ForEach(id => checkAPI.RemoveWorldText(id, false));
+                    _currentVipMapList.ForEach(id => checkAPI.RemoveWorldText(id, false));
+                    _currentVipCompletionsList.ForEach(id => checkAPI.RemoveWorldText(id, false));
                 }
                 _currentPointsList.Clear();
                 _currentMapList.Clear();
                 _currentCompletionsList.Clear();
+                //Vip
+                _currentVipPointsList.Clear();
+                _currentVipMapList.Clear();
+                _currentVipCompletionsList.Clear();
             });
         }
 
@@ -92,10 +112,19 @@ namespace SharpTimerWallLists
                 _currentPointsList.ForEach(id => checkAPI.RemoveWorldText(id, false));
                 _currentMapList.ForEach(id => checkAPI.RemoveWorldText(id, false));
                 _currentCompletionsList.ForEach(id => checkAPI.RemoveWorldText(id, false));
+                //Vip
+                _currentVipPointsList.ForEach(id => checkAPI.RemoveWorldText(id, false));
+                _currentVipMapList.ForEach(id => checkAPI.RemoveWorldText(id, false));
+                _currentVipCompletionsList.ForEach(id => checkAPI.RemoveWorldText(id, false));
             }
             _currentPointsList.Clear();
             _currentMapList.Clear();
             _currentCompletionsList.Clear();
+            //Vip
+            _currentVipPointsList.Clear();
+            _currentVipMapList.Clear();
+            _currentVipCompletionsList.Clear();
+
             _updateTimer?.Kill();
         }
 
@@ -134,7 +163,8 @@ namespace SharpTimerWallLists
                 _connectionString = $"Host={dbSettings.Host};Port={dbSettings.Port};Database={dbSettings.Database};Username={dbSettings.Username};Password={dbSettings.Password};SslMode={npgSqlSslMode};";
             }
         }
-
+        
+        #region List Add/Remove Functions
         [ConsoleCommand($"css_{DefaultCommandNames.PointsListCommand}", "Sets up the points list")]
         [RequiresPermissions($"{DefaultCommandNames.CommandPermission}")]
         public void OnPointsListAdd(CCSPlayerController? player, CommandInfo? command)
@@ -159,6 +189,30 @@ namespace SharpTimerWallLists
             CreateTopList(player, command, ListType.Completions);
         }
 
+        [ConsoleCommand($"css_{DefaultCommandNames.VipPointsListCommand}", "Sets up the vip points list")]
+        [RequiresPermissions($"{DefaultCommandNames.CommandPermission}")]
+        public void OnVipPointsListAdd(CCSPlayerController? player, CommandInfo? command)
+        {
+            if (player == null || command == null) return;
+            CreateTopList(player, command, ListType.VIPPoints);
+        }
+
+        [ConsoleCommand($"css_{DefaultCommandNames.VipTimesListCommand}", "Sets up the vip map top list")]
+        [RequiresPermissions($"{DefaultCommandNames.CommandPermission}")]
+        public void OnVipMapListAdd(CCSPlayerController? player, CommandInfo? command)
+        {
+            if (player == null || command == null) return;
+            CreateTopList(player, command, ListType.VIPTimes);
+        }
+
+        [ConsoleCommand($"css_{DefaultCommandNames.VipCompletionsListCommand}", "Sets up the vip map completions list")]
+        [RequiresPermissions($"{DefaultCommandNames.CommandPermission}")]
+        public void OnVipCompletionsListAdd(CCSPlayerController? player, CommandInfo? command)
+        {
+            if (player == null || command == null) return;
+            CreateTopList(player, command, ListType.VIPCompletions);
+        }
+
         [ConsoleCommand($"css_{DefaultCommandNames.RemoveListCommand}", "Removes the closest list, whether points, map time, or completions")]
         [RequiresPermissions($"{DefaultCommandNames.CommandPermission}")]
         public void OnRemoveList(CCSPlayerController? player, CommandInfo? command)
@@ -171,6 +225,7 @@ namespace SharpTimerWallLists
                 Server.NextWorldUpdate(() => RemoveClosestList(player, command));
             });
         }
+        #endregion
 
         private void CreateTopList(CCSPlayerController player, CommandInfo command, ListType listType)
         {
@@ -201,6 +256,12 @@ namespace SharpTimerWallLists
                                 _currentMapList.Add(messageID);
                             if (listType == ListType.Completions)
                                 _currentCompletionsList.Add(messageID);
+                            if (listType == ListType.VIPPoints)
+                                _currentVipPointsList.Add(messageID);
+                            if (listType == ListType.VIPTimes)
+                                _currentVipMapList.Add(messageID);
+                            if (listType == ListType.VIPCompletions)
+                                _currentVipCompletionsList.Add(messageID);
 
                             var lineList = checkAPI.GetWorldTextLineEntities(messageID);
                             if (lineList?.Count > 0)
@@ -236,7 +297,7 @@ namespace SharpTimerWallLists
                 return;
             }
 
-            var combinedList = _currentPointsList.Concat(_currentMapList).Concat(_currentCompletionsList).ToList();
+            var combinedList = _currentPointsList.Concat(_currentMapList).Concat(_currentCompletionsList).Concat(_currentVipPointsList).Concat(_currentVipMapList).Concat(_currentVipCompletionsList).ToList();
 
             var target = combinedList
                 .SelectMany(id => checkAPI.GetWorldTextLineEntities(id)?.Select(entity => new 
@@ -245,7 +306,10 @@ namespace SharpTimerWallLists
                     Entity = entity, 
                     IsPointsList = _currentPointsList.Contains(id),
                     IsMapList = _currentMapList.Contains(id),
-                    IsCompletionsList = _currentCompletionsList.Contains(id)
+                    IsCompletionsList = _currentCompletionsList.Contains(id),
+                    IsVipPointsList = _currentVipPointsList.Contains(id),
+                    IsVipMapList = _currentVipMapList.Contains(id),
+                    IsVipCompletionsList = _currentVipCompletionsList.Contains(id),
                 }) ?? Enumerable.Empty<dynamic>())
                 .Where(x => x.Entity.AbsOrigin != null && player.PlayerPawn.Value?.AbsOrigin != null && DistanceTo(x.Entity.AbsOrigin, player.PlayerPawn.Value!.AbsOrigin) < 100)
                 .OrderBy(x => DistanceTo(x.Entity.AbsOrigin, player.PlayerPawn.Value!.AbsOrigin))
@@ -273,14 +337,32 @@ namespace SharpTimerWallLists
                 {
                     _currentCompletionsList.Remove(target.Id);
                 }
+                else if (target.IsVipPointsList)
+                {
+                    _currentVipPointsList.Remove(target.Id);
+                }
+                else if (target.IsVipMapList)
+                {
+                    _currentVipMapList.Remove(target.Id);
+                }
+                else if (target.IsVipCompletionsList)
+                {
+                    _currentVipCompletionsList.Remove(target.Id);
+                }
 
                 var mapName = Server.MapName;
                 var mapsDirectory = Path.Combine(ModuleDirectory, "maps");
-                var path = target.IsPointsList
-                    ? Path.Combine(mapsDirectory, $"{mapName}_pointslist.json")
-                    : target.IsMapList
-                        ? Path.Combine(mapsDirectory, $"{mapName}_timeslist.json")
-                        : Path.Combine(mapsDirectory, $"{mapName}_completionslist.json");
+                var path = target.IsVipPointsList
+                            ? Path.Combine(mapsDirectory, $"{mapName}_vip_pointslist.json")
+                            : target.IsVipMapList
+                                ? Path.Combine(mapsDirectory, $"{mapName}_vip_timeslist.json")
+                                : target.IsVipCompletionsList
+                                    ? Path.Combine(mapsDirectory, $"{mapName}_vip_completionslist.json")
+                                    : target.IsPointsList
+                                        ? Path.Combine(mapsDirectory, $"{mapName}_pointslist.json")
+                                        : target.IsMapList
+                                            ? Path.Combine(mapsDirectory, $"{mapName}_timeslist.json")
+                                            : Path.Combine(mapsDirectory, $"{mapName}_completionslist.json");
 
                 if (File.Exists(path))
                 {
@@ -337,6 +419,9 @@ namespace SharpTimerWallLists
                     ListType.Times => $"{mapName}_timeslist.json",
                     ListType.Points => $"{mapName}_pointslist.json",
                     ListType.Completions => $"{mapName}_completionslist.json",
+                    ListType.VIPTimes => $"{mapName}_vip_timeslist.json",
+                    ListType.VIPPoints => $"{mapName}_vip_pointslist.json",
+                    ListType.VIPCompletions => $"{mapName}_vip_completionslist.json",
                     _ => throw new ArgumentException("Invalid list type")
                 };
                 var path = Path.Combine(mapsDirectory, filename);
@@ -405,6 +490,12 @@ namespace SharpTimerWallLists
                                             _currentMapList.Add(messageID);
                                         else if (listType == ListType.Completions)
                                             _currentCompletionsList.Add(messageID);
+                                        else if (listType == ListType.VIPPoints)
+                                            _currentVipPointsList.Add(messageID);
+                                        else if (listType == ListType.VIPTimes)
+                                            _currentVipMapList.Add(messageID);
+                                        else if (listType == ListType.VIPCompletions)
+                                            _currentVipCompletionsList.Add(messageID);
                                     }
                                 }
                             }
@@ -434,6 +525,15 @@ namespace SharpTimerWallLists
             LoadWorldTextFromFile(pointsPath, ListType.Points, mapName);
             LoadWorldTextFromFile(timesPath, ListType.Times, mapName);
             LoadWorldTextFromFile(completionsPath, ListType.Completions, mapName);
+
+            // VIP Loading
+            var vip_pointsPath = Path.Combine(mapsDirectory, $"{mapName}_vip_pointslist.json");
+            var vip_timesPath = Path.Combine(mapsDirectory, $"{mapName}_vip_timeslist.json");
+            var vip_completionsPath = Path.Combine(mapsDirectory, $"{mapName}_vip_completionslist.json");
+
+            LoadWorldTextFromFile(vip_pointsPath, ListType.VIPPoints, mapName);
+            LoadWorldTextFromFile(vip_timesPath, ListType.VIPTimes, mapName);
+            LoadWorldTextFromFile(vip_completionsPath, ListType.VIPCompletions, mapName);
         }
 
         public static Vector ParseVector(string vectorString)
@@ -473,10 +573,18 @@ namespace SharpTimerWallLists
                     var pointsTopList = await GetTopPlayersAsync(Config.TopCount, ListType.Points, mapName);
                     var timesTopList = await GetTopPlayersAsync(Config.TopCount, ListType.Times, mapName);
                     var completionsTopList = await GetTopPlayersAsync(Config.TopCount, ListType.Completions, mapName);
+                    //VIP
+                    var vip_pointsTopList = await GetTopPlayersAsync(Config.TopCount, ListType.VIPPoints, mapName);
+                    var vip_timesTopList = await GetTopPlayersAsync(Config.TopCount, ListType.VIPTimes, mapName);
+                    var vip_completionsTopList = await GetTopPlayersAsync(Config.TopCount, ListType.VIPCompletions, mapName);
 
                     var pointsLinesList = GetTopListTextLines(pointsTopList, ListType.Points);
                     var timesLinesList = GetTopListTextLines(timesTopList, ListType.Times);
                     var completionsLinesList = GetTopListTextLines(completionsTopList, ListType.Completions);
+                    //VIP
+                    var vip_pointsLinesList = GetTopListTextLines(vip_pointsTopList, ListType.VIPPoints);
+                    var vip_timesLinesList = GetTopListTextLines(vip_timesTopList, ListType.VIPTimes);
+                    var vip_completionsLinesList = GetTopListTextLines(vip_completionsTopList, ListType.VIPCompletions);
 
                     Server.NextWorldUpdate(() =>
                     {
@@ -488,6 +596,11 @@ namespace SharpTimerWallLists
                                 _currentPointsList.ForEach(id => checkAPI.UpdateWorldText(id, pointsLinesList));
                                 _currentMapList.ForEach(id => checkAPI.UpdateWorldText(id, timesLinesList));
                                 _currentCompletionsList.ForEach(id => checkAPI.UpdateWorldText(id, completionsLinesList));
+
+                                //Vip
+                                _currentVipPointsList.ForEach(id => checkAPI.UpdateWorldText(id, vip_pointsLinesList));
+                                _currentVipMapList.ForEach(id => checkAPI.UpdateWorldText(id, vip_timesLinesList));
+                                _currentVipCompletionsList.ForEach(id => checkAPI.UpdateWorldText(id, vip_completionsLinesList));
                             }
                         }
                         catch (Exception ex)
@@ -509,7 +622,7 @@ namespace SharpTimerWallLists
             return value.Length <= maxLength ? value : value.Substring(0, maxLength) + "...";
         }
 
-        private List<TextLine> GetTopListTextLines(List<PlayerPlace> topList, ListType listType)
+        private List<TextLine> GetTopListTextLines(List<PlayerPlace> topList, ListType listType) // EDIT TO ACCOUNT FOR VIP
         {
             Color ParseColor(string colorName)
             {
@@ -543,6 +656,9 @@ namespace SharpTimerWallLists
                     ListType.Points => Config.PointsTextAlignment.ToLower(),
                     ListType.Times => Config.TimesTextAlignment.ToLower(),
                     ListType.Completions => Config.CompletionsTextAlignment.ToLower(),
+                    ListType.VIPPoints => Config.PointsTextAlignment.ToLower(),
+                    ListType.VIPTimes => Config.TimesTextAlignment.ToLower(),
+                    ListType.VIPCompletions => Config.CompletionsTextAlignment.ToLower(),
                     _ => "center"
                 };
 
@@ -596,6 +712,45 @@ namespace SharpTimerWallLists
 
                 });
             }
+            else if (listType == ListType.VIPPoints)
+            {
+                linesList.Add(new TextLine
+                {
+                    Text = Config.VipPointsTitleText,
+                    Color = ParseColor(Config.TitleTextColor),
+                    FontSize = Config.TitleFontSize,
+                    FullBright = true,
+                    Scale = Config.TitleTextScale,
+                    JustifyHorizontal = GetTextAlignment(listType)
+
+                });
+            }
+            else if (listType == ListType.VIPTimes)
+            {
+                linesList.Add(new TextLine
+                {
+                    Text = Config.VipTimesTitleText,
+                    Color = ParseColor(Config.TitleTextColor),
+                    FontSize = Config.TitleFontSize,
+                    FullBright = true,
+                    Scale = Config.TitleTextScale,
+                    JustifyHorizontal = GetTextAlignment(listType)
+
+                });
+            }
+            else if (listType == ListType.VIPCompletions)
+            {
+                linesList.Add(new TextLine
+                {
+                    Text = Config.VipCompletionsTitleText,
+                    Color = ParseColor(Config.TitleTextColor),
+                    FontSize = Config.TitleFontSize,
+                    FullBright = true,
+                    Scale = Config.TitleTextScale,
+                    JustifyHorizontal = GetTextAlignment(listType)
+
+                });
+            }
 
             for (int i = 0; i < topList.Count; i++)
             {
@@ -614,6 +769,9 @@ namespace SharpTimerWallLists
                         ListType.Points => topplayer.GlobalPoints.ToString(),
                         ListType.Times => topplayer.FormattedTime,
                         ListType.Completions => topplayer.Completions.ToString(),
+                        ListType.VIPPoints => topplayer.GlobalPoints.ToString(),
+                        ListType.VIPTimes => topplayer.FormattedTime,
+                        ListType.VIPCompletions => topplayer.Completions.ToString(),
                         _ => string.Empty
                     };
                 var lineText = $"{i + 1}. {truncatedName} - {pointsOrTimeOrCompletions}";
@@ -633,7 +791,7 @@ namespace SharpTimerWallLists
             return linesList;
         }
 
-        public async Task<List<PlayerPlace>> GetTopPlayersAsync(int topCount, ListType listType, string mapName)
+        public async Task<List<PlayerPlace>> GetTopPlayersAsync(int topCount, ListType listType, string mapName) // ADD sql queries
         {
             string query;
             string tablePrefix = Config.DatabaseSettings.TablePrefix;
@@ -687,6 +845,57 @@ namespace SharpTimerWallLists
                     ORDER BY Completions DESC
                     LIMIT @TopCount",
 
+                    // ADD VIP SQL QUERIES
+                    ListType.VIPPoints => $@"
+                    WITH RankedPlayers AS (
+                        SELECT
+                            SteamID,
+                            PlayerName,
+                            GlobalPoints,
+                            DENSE_RANK() OVER (ORDER BY GlobalPoints DESC) AS playerPlace
+                        FROM {tablePrefix}PlayerStats
+                        WHERE IsVip = 1
+                    )
+                    SELECT SteamID, PlayerName, GlobalPoints, playerPlace
+                    FROM RankedPlayers
+                    ORDER BY GlobalPoints DESC
+                    LIMIT @TopCount",
+
+                    ListType.VIPTimes => $@"
+                    WITH RankedPlayers AS (
+                        SELECT
+                            pr.SteamID,
+                            pr.PlayerName,
+                            pr.FormattedTime,
+                            DENSE_RANK() OVER (ORDER BY STR_TO_DATE(pr.FormattedTime, '%i:%s.%f') ASC) AS playerPlace
+                        FROM PlayerRecords pr
+                        JOIN PlayerStats ps ON pr.SteamID = ps.SteamID
+                        WHERE pr.MapName = @MapName 
+                        AND pr.Style = {ConfigStyle}
+                        AND ps.IsVip = 1
+                    )
+                    SELECT SteamID, PlayerName, FormattedTime, playerPlace
+                    FROM RankedPlayers
+                    ORDER BY STR_TO_DATE(FormattedTime, '%i:%s.%f') ASC
+                    LIMIT @TopCount;",
+
+                    ListType.VIPCompletions => $@"
+                    WITH CompletionCounts AS (
+                        SELECT
+                            pr.SteamID,
+                            pr.PlayerName,
+                            COUNT(DISTINCT pr.MapName) AS Completions
+                        FROM PlayerRecords pr
+                        JOIN PlayerStats ps ON pr.SteamID = ps.SteamID
+                        WHERE pr.MapName NOT LIKE '%bonus%'
+                        AND ps.IsVip = 1
+                        GROUP BY pr.SteamID, pr.PlayerName
+                    )
+                    SELECT SteamID, PlayerName, Completions
+                    FROM CompletionCounts
+                    ORDER BY Completions DESC
+                    LIMIT @TopCount;",
+
                     _ => throw new ArgumentException("Invalid list type")
                 };
 
@@ -698,6 +907,9 @@ namespace SharpTimerWallLists
                         ListType.Points => new { TopCount = topCount },
                         ListType.Completions => new { TopCount = topCount },
                         ListType.Times => new { TopCount = topCount, MapName = mapName },
+                        ListType.VIPPoints => new {TopCount = topCount},
+                        ListType.VIPCompletions => new {TopCount = topCount},
+                        ListType.VIPTimes => new {TopCount = topCount, MapName = mapName},
                         _ => throw new ArgumentException("Invalid list type")
                     };
 
@@ -865,7 +1077,10 @@ namespace SharpTimerWallLists
     {
         Points,
         Times,
-        Completions
+        Completions,
+        VIPPoints,
+        VIPTimes,
+        VIPCompletions
     }
 
     public class PlayerPlace
@@ -881,6 +1096,9 @@ namespace SharpTimerWallLists
         public const string PointsListCommand = "pointslist";
         public const string TimesListCommand = "timeslist";
         public const string CompletionsListCommand = "completionslist";
+        public const string VipPointsListCommand = "vip_pointslist";
+        public const string VipTimesListCommand = "vip_timeslist";
+        public const string VipCompletionsListCommand = "vip_completionslist";
         public const string RemoveListCommand = "removelist";
         public const string CommandPermission = "@css/root";
     }

@@ -21,7 +21,7 @@
     <PackageReference Include="Npgsql" Version="8.0.3" />
     <PackageReference Include="System.Data.SQLite" Version="1.0.118" />
     <Reference Include="K4WorldTextSharedApi">
-      <HintPath>C:\CounterStrikeSharp\SharpTimer-WallLists\K4-WorldText-SharedAPI.dll</HintPath>
+      <HintPath>D:\CS2 SharpTimer walllists\SharpTimer-WallLists\K4-WorldText-SharedAPI.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>
