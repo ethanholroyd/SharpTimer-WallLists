@@ -1,7 +1,8 @@
 <a name="readme-top"></a>
-[![UpdateManager Compatible](https://img.shields.io/badge/CS2-UpdateManager-darkgreen)](https://github.com/Kandru/cs2-update-manager/)
+> [!WARNING]
+> This repo has been moved to https://github.com/SharpTimer/WallLists
 <!-- PROJECT LOGO -->
-<br />
+<br>
 <div align="center">
   <h1 align="center">SharpTimer Wall Lists</h1>
   <a align="center">Provides three lists to display on the map: Times List, Points List, Completions List.<br>Dynamically updates on either map start or a given interval. Supports <a href="https://github.com/Kandru/cs2-update-manager">automatic updates</a>.</a><br>
